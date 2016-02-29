@@ -41,9 +41,22 @@ var rounded;
 var tmpSt, tmpEnd, dateRange;
 var dateFormat = d3.time.format("%x").parse;
 function types(d) {
-  d.StDateP = dateFormat(String(d.StDate));
-  d.EndDateP = dateFormat(String(d.EndDate));
+  d.StDateP = dateFormat(zeropad(d.StartMonth1)+'/'+
+    zeropad(d.StartDay1)+'/'+d.StartYear1);
+  if(d.EndYear1 != -9 && d.EndYear1 != -8){
+    d.EndDateP = dateFormat(zeropad(d.EndMonth1)+'/'+
+      zeropad(d.EndDay1)+'/'+d.EndYear1);
+  } else {
+    d.EndDateP = dateFormat(zeropad(d.EndMonth2)+'/'+
+      zeropad(d.EndDay2)+'/'+d.EndYear2);
+  }
   return d;
+}
+
+function zeropad(x){
+  var val = String(x);
+  var zeros = '00'
+  return zeros.substring(0, (zeros.length - val.length)) + val;
 }
 
 function recolor(){
@@ -56,7 +69,13 @@ function recolor(){
         d3.select("#warBox")
           .append('div')
           .attr("class","waritem")
-          .html(d.txt);
+          .html(function(d){
+            var tmpTxt = '<div id="w'+ d.WarNum +
+              '" class="ui accordion"><div class="active title">'+
+              d.WarName+'</div><div class="active content">' +
+              d.txt + '</div></div>';
+            return tmpTxt;
+          });
         return false;
       } else {
         return true;
@@ -71,110 +90,80 @@ function recolor(){
 function drawMap(){
   // Load data
   d3.json("../data/maps/final/world.json",function(error,geodata) {
-    d3.csv("../data/other/CC.csv",function(error2,cCode) {
-      d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
+  d3.csv("../data/other/CC.csv",function(error2,cCode) {
+  d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
+  d3.csv("../data/COW/Inter-StateWarData_v4.0.csv", types, function(error4, cow) {
       if (error) return console.log(error);
       if (error2) return console.log(error2);
       if (error3) return console.log(error3);
+      if (error4) return console.log(error4);
 
+      console.log(cow);
+
+      // Hard-code discrete variables
       function buildCodes(){
+        codehash['Region'] = new Object();
+        codehash['Initiator'] = new Object();
         codehash['Outcome'] = new Object();
-        codehash['Settle'] = new Object();
-        codehash['Fatality'] = new Object();
-        codehash['Hostility'] = new Object();
 
-        codehash['Outcome'][1] = "Victory by A";
-        codehash['Outcome'][2] = "Victory by B";
-        codehash['Outcome'][3] = "Yield by A";
-        codehash['Outcome'][4] = "Yield by B";
-        codehash['Outcome'][5] = "Stalemate";
-        codehash['Outcome'][6] = "Compromise";
-        codehash['Outcome'][7] = "Released";
-        codehash['Outcome'][8] = "Unclear";
-        codehash['Outcome'][9] = "Joins ongoing war";
-        codehash['Outcome'][-9] = "N/A";
+        codehash['Region'][1] = "W. Hemisphere";
+        codehash['Region'][2] = "Europe";
+        codehash['Region'][4] = "Africa";
+        codehash['Region'][6] = "Middle East";
+        codehash['Region'][7] = "Asia";
+        codehash['Region'][9] = "Oceania";
+        codehash['Region'][11] = "Europe & Middle East";
+        codehash['Region'][12] = "Europe & Asia";
+        codehash['Region'][13] = "W. Hemisphere & Asia";
+        codehash['Region'][14] = "Europe, Africa & Middle East";
+        codehash['Region'][15] = "Europe, Africa, Middle East & Asia";
+        codehash['Region'][16] = "Africa, Middle East, Asia & Oceania";
+        codehash['Region'][17] = "Asia & Oceania";
+        codehash['Region'][18] = "Africa & Middle East";
+        codehash['Region'][19] = "Europe, Africa, Middle East, Asia & Oceania";
 
-        codehash['Settle'][1] = "Negotiated";
-        codehash['Settle'][2] = "Imposed";
-        codehash['Settle'][3] = "None";
-        codehash['Settle'][4] = "Unclear";
-        codehash['Settle'][-1] = "N/A";
-
-        codehash['Fatality'][0] = "0";
-        codehash['Fatality'][1] = "1-25";
-        codehash['Fatality'][2] = "26-100";
-        codehash['Fatality'][3] = "101-250";
-        codehash['Fatality'][4] = "251-500";
-        codehash['Fatality'][5] = "501-999";
-        codehash['Fatality'][6] = ">999";
-        codehash['Fatality'][-9] = "N/A";
-
-        codehash['Hostility'][0] = "None";
-        codehash['Hostility'][1] = "Threat: force";
-        codehash['Hostility'][2] = "Threat: blockade";
-        codehash['Hostility'][3] = "Threat: occupation";
-        codehash['Hostility'][4] = "Threat: declare war";
-        codehash['Hostility'][5] = "Threat: CBR weapons";
-        codehash['Hostility'][6] = "Threat: join war";
-        codehash['Hostility'][7] = "Show of force";
-        codehash['Hostility'][8] = "Alert";
-        codehash['Hostility'][9] = "Nuclear alert";
-        codehash['Hostility'][10] = "Mobilization";
-        codehash['Hostility'][11] = "Fortify border";
-        codehash['Hostility'][12] = "Border violation";
-        codehash['Hostility'][13] = "Blockade";
-        codehash['Hostility'][14] = "Occupation";
-        codehash['Hostility'][15] = "Seizure";
-        codehash['Hostility'][16] = "Attack";
-        codehash['Hostility'][17] = "Clash";
-        codehash['Hostility'][18] = "Declare war";
-        codehash['Hostility'][19] = "CBR weapons";
-        codehash['Hostility'][20] = "Start interstate war";
-        codehash['Hostility'][21] = "Join interstate war";
-        codehash['Hostility'][-9] = "N/A";
+        codehash['Initiator'][1] = "Yes";
+        codehash['Initiator'][2] = "No";
+        
+        codehash['Outcome'][1] = "Victor";
+        codehash['Outcome'][2] = "Loser";
+        codehash['Outcome'][3] = "Compromise/Tied";
+        codehash['Outcome'][4] = "Transformed into new war";
+        codehash['Outcome'][5] = "Ongoing";
+        codehash['Outcome'][6] = "Stalemate";
+        codehash['Outcome'][7] = "Continuing low-level conflict";
+        codehash['Outcome'][8] = "Changed sides";
       }
       buildCodes();
 
-      // Set up hash
+      // Set up hashes
       cCode.forEach(function(d, i) {
           countryhash[d.CId] = d;
       });
 
-      mid.forEach(function(d, i){
-          var tmpTxt = '<div class="warT"><b>ID</b></div><div class="warV">'+
-            d.DispNum3+'</div><br>'
-          tmpTxt += '<div class="warT"><b>Outcome</b></div><div class="warV">'+
-            codehash['Outcome'][d.Outcome]+'</div><br>'
-          tmpTxt += '<div class="warT"><b>Settlement</b></div><div class="warV">'+
-            codehash['Settle'][d.Settle]+'</div><br>'
-          tmpTxt += '<div class="warT"><b>Hostility</b></div><div class="warV">'+
-            codehash['Hostility'][d.HiAct]+'</div><br>'
-          tmpTxt += '<div class="warT"><b>Fatality</b></div><div class="warV">'+
-            codehash['Fatality'][d.Fatality]+'</div><br>'
-          d['txt'] = tmpTxt;
-          warhash[d.DispNum3] = d;
+      cow.forEach(function(d, i){
+        // Add this specific country
+        var tmpTxt = '<div class="warT"><b>'+d.StateName+'</b></div>';
+        if(d.Side == d.Initiator && d.Side == d.Outcome){
+          tmpTxt += '<div class="warV">Initiator, Victor</div><br>';
+        } else if (d.Side == d.Initiator){
+          tmpTxt += '<div class="warV">Initiator, Defeated</div><br>';
+        } else if (d.Side == d.Outcome){
+          tmpTxt += '<div class="warV">Victor</div><br>';
+        } else {
+          tmpTxt += '<div class="warV">Defeated</div><br>';
+        }
+        tmpTxt += '<div class="warT"><b>Fatalities</b></div><div class="warV">'+
+          d.BatDeath+'</div><br>';
+
+        d['txt'] = tmpTxt;
+
+        if(warhash[d.WarNum] == undefined){
+          warhash[d.WarNum] = new Object();
+        }
+        warhash[d.WarNum][d.StateName] = d;
       });
-      
-
-      // d3.select("#warBox")
-      //    .selectAll("div")
-      //    .data(mid)
-      //    .enter()
-      //    .append("div")
-      //        .attr("class","waritem")
-      //        .attr("id",function (d){ 
-      //         return "w"+d.DispNum3;
-      //       })
-      //        .text(function (d) {
-      //         var tmpTxt = '';
-      //         tmpTxt += 'ID <br><b><span>'+d.DispNum3+'</span></b>'
-      //         tmpTxt += 'Outcome <br><b><span>'+d.Outcome+'</span></b>'
-      //         tmpTxt += 'Settlement <br><b><span>'+d.Settle+'</span></b>'
-      //         tmpTxt += 'Hostility <br><b><span>'+d.HiAct+'</span></b>'
-      //         tmpTxt += 'Fatality <br><b><span>'+d.Fatality+'</span></b>'
-      //         return tmpTxt;
-      //       });
-
+      console.log(warhash);
 
       // Draw map
       g.selectAll("path")
@@ -203,62 +192,31 @@ function drawMap(){
         });
 
       // Add dots for incidents
-      g.selectAll(".circ")
-        .data(mid)
-        .enter()
-        .append("circle")
-        .style("fill", "red")
-        .attr("class", "circ")
-        .attr('d', path)
-        .attr("cx", function(d) {
-          return projection([d.longitude, d.latitude])[0];
-        })
-        .attr("cy", function(d) {
-          return projection([d.longitude, d.latitude])[1];
-        })
-        .attr("r", 0.5);
+      // g.selectAll(".circ")
+      //   .data(mid)
+      //   .enter()
+      //   .append("circle")
+      //   .style("fill", "red")
+      //   .attr("class", "circ")
+      //   .attr('d', path)
+      //   .attr("cx", function(d) {
+      //     return projection([d.longitude, d.latitude])[0];
+      //   })
+      //   .attr("cy", function(d) {
+      //     return projection([d.longitude, d.latitude])[1];
+      //   })
+      //   .attr("r", 0.5);
 
      
-
-    //   // Add dots for incidents
-    //   g.selectAll(".circ")
-    //     .data(hiv)
-    //     .enter()
-    //     .append("circle")
-    //     .style("fill", "rgba(255, 255, 255, 0.5)")
-    //     .attr("class", "circ")
-    //     .attr("r", function(d) {
-    //       return hash[d.id]["PopulationAccessPerCenter"] / Number(25000 - newRad);
-    //     })
-    //     .attr("transform", function(d) {
-    //       var proj = projection([hash[d.id]["Longitude"], hash[d.id]["Latitude"]]);
-    //       return "translate(" + proj + ")";
-    //     })
-    //     .on("mouseover", function(d) {
-    //       d3.select(this)
-    //         .style("stroke", "white")
-    //         .style("stroke-width", 3);
-    //       d3.select("#stateId")
-    //         .select("#sName")
-    //         .text(hash[d.id]["Geography"]);
-    //       d3.select("#stateId")
-    //         .select("#sTC")
-    //         .text(hash[d.id]["TestingCenters"]);
-    //       d3.select("#stateId")
-    //         .select("#sPA")
-    //         .text(hash[d.id]["PopulationAccessPerCenter"]);
-    //     })
-    //     .on("mouseout", function(e) {
-    //       d3.select(this)
-    //       .style("stroke-width", 0)
-    //     });
 
       // Show axis
 
       var navWidth = width * 3/4,
         navHeight = 20;
 
-      dateRange = d3.extent(mid.map(function(d) { return d.StDateP }));
+      dateRange = cow.map(function(d) { return d.StDateP });
+      dateRange = dateRange.concat(cow.map(function(d) { return d.EndDateP }));
+      dateRange = d3.extent(dateRange);
 
       var navX = d3.time.scale()
         .domain(dateRange)
@@ -296,7 +254,7 @@ function drawMap(){
       // Bottom nav
       var brush = d3.svg.brush()
         .x(navX)
-        .extent([new Date(1900, 11, 31), dateRange[1]])
+        .extent([new Date(1900, 11, 31), new Date(1950, 11, 31)])
         .on("brushend", brushfn);
 
       // Grid bg
@@ -335,9 +293,11 @@ function drawMap(){
         .attr('id', 'xAxis')
         .attr("transform", "translate(160," + (height - 50) + ")")
         .call(xAxis);
-            
-      });
-    });
+
+      recolor();
+  });          
+  });
+  });
   });
 }
 drawMap();
