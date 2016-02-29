@@ -1,0 +1,171 @@
+html, body{
+  background-color: #E8E8E8;
+  font-family: "Roboto Slab", serif;
+  font-weight: 100;
+  font-size: 100%;
+  width: 100%;
+}
+
+h1{
+  line-height: .5;
+}
+
+.countries{
+  fill: rgba(0, 0, 0, 1);
+  stroke: #777;
+  stroke-width: 0.5px;
+}
+
+path {
+  fill: rgba(0, 0, 0, 0);
+}
+
+line {
+  stroke: #555;
+  stroke-width: 2px;
+}
+
+.hidden {
+  display: none;
+}
+
+#mapSVG{
+  position:relative;
+  top:0px;
+}
+
+#countryId, .label{
+  position:absolute;
+  font-family: 'Roboto Slab', serif;
+  font-weight: 200;
+  text-transform: capitalize;
+}
+
+#countryId{
+  top:130px;
+  left:50px;
+  font-size: 0.8em;
+}
+#warBox{
+  position: absolute;
+  top: 130px;
+  left: 820px;
+  height: 600px;
+  width:250px;
+  overflow: scroll;
+}
+.waritem{
+  display: block;
+  margin-bottom: 10px;
+}
+.warT {
+  display: inline-block;
+  width:100px;
+}
+.warV {
+  display: inline-block;
+  width:150px;
+}
+#lTime{
+  top:610px;
+  left:165px;
+}
+
+#lEdit{
+  top:735px;
+  left:165px;
+}
+
+#lMenu{
+  top:590px;
+  left:525px;
+  font-size: 0.7em;
+  text-align: right;
+}
+
+.small{
+  font-size: .7em;
+}
+
+.inp{
+  width:55px;
+}
+.inputDiv{
+  width:70px;
+  display: inline-block;
+}
+#BNeut, #BGreen, #BRad, #BSub{
+  position: absolute;
+  display: inline-block;
+  text-align: left;
+  top:765px;
+}
+#BNeut{
+  left:165px;
+}
+#BGreen{
+  left:340px;
+}
+#BRad{
+  left:520px;
+}
+#BSub{
+  left:705px;
+}
+#lKey{
+  position: absolute;
+  left: 730px;
+  top:450px;
+}
+
+
+/*Bottom*/
+#xAxis path, #xAxis line {
+  stroke: #ccc;
+  fill: none;
+  shape-rendering: crispEdges;
+}
+
+#xAxis{
+  font-size: 0.5em;
+}
+
+
+
+
+.brushBG {
+  fill: #ddd;
+}
+
+.brushGrid line,
+.brushGrid path {
+  fill: none;
+  stroke: #fff;
+  shape-rendering: crispEdges;
+}
+
+.brushGrid .minor line {
+  stroke-opacity: .5;
+  stroke-width: 1px;
+}
+
+
+
+
+.brush .extent {
+  stroke: #44BAC1;
+  fill: #44BAC1;
+  fill-opacity: .365;
+  shape-rendering:crispEdges;
+}
+
+
+
+
+
+
+
+
+
+
+

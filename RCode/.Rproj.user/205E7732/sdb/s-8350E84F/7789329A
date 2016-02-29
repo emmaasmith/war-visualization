@@ -1,0 +1,22 @@
+{
+    "contents" : "",
+    "created" : 1456775155486.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7789329A",
+    "lastKnownWriteTime" : 5292976843906638626,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "caption" : "MID_raw",
+        "contentUrl" : "content?title=MID_raw&file=02df88a5f4304fe095bec70519368a81.htm",
+        "displayedObservations" : 1000,
+        "displayedVariables" : 24,
+        "totalObservations" : 2586,
+        "variables" : 24
+    },
+    "source_on_save" : false,
+    "type" : "r_dataframe"
+}
