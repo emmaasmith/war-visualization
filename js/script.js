@@ -21,7 +21,8 @@ var colorVarType = "HIVstage3Rates_",
     colorVarYear = "08",
     colorVariable = colorVarType + colorVarYear;
 
-var countryhash = new Object();
+var countryhashMap = new Object();
+var countryhashCOW = new Object();
 var warhash = new Object();
 var codehash = [];
 
@@ -33,6 +34,8 @@ var yi = "08",
     yf = "09";
 
 var newRad = 20000;
+var currCol;
+var countryFilter = 0;
 
 var dataOptions;
 
@@ -60,9 +63,12 @@ function zeropad(x){
 }
 
 function addBoxes(){
-  var tmpHTML = '', allHTML = '';
+  var tmpHTML = '', itemHTML = '', allHTML = '',
+      hasCtry = 0;
 
   for (d in warhash) {
+    hasCtry = 0;
+
     tmpHTML = '<div id="' + warhash[d]['name'] +
       '" class="ui styled accordion"><div class="title"><i class="dropdown icon"></i>'+
       warhash[d]['min'].getFullYear() + '-' + warhash[d]['max'].getFullYear() + 
@@ -74,15 +80,22 @@ function addBoxes(){
 
       for(e in warhash[d]){
         if(warhash[d][e]['txt'] != undefined){
+          if(countryFilter==0 || (countryFilter!=0 && warhash[d][e]['ccode'] == countryFilter)){
+            hasCtry = 1;
+          }
           tmpHTML += warhash[d][e]['txt'];
         }
       };
 
       tmpHTML += '</div></div>';
-      allHTML += tmpHTML;
+      itemHTML += tmpHTML;
+      tmpHTML = '';
     }
-
-    tmpHTML = '';
+    if(hasCtry == 1){
+      allHTML += itemHTML;
+    }
+    
+    itemHTML = '';
   };
 
   d3.select("#warBox")
@@ -90,6 +103,28 @@ function addBoxes(){
   $('.ui.accordion').accordion('refresh');
 }
 
+function recolor(warData){
+  g.selectAll("path")
+    .style("fill", function(d) {
+      if(countryhashMap[d.id] != undefined){
+        var cName = countryhashMap[d.id]['cowCode'];
+        for (i in warData){
+          if(warData[i]['ccode'] != undefined){
+            if (cName == warData[i]['ccode']){
+              if(warData[i]['Outcome']==1){
+                return '#3C9EB4';
+              } else if (warData[i]['Outcome']==2){
+                return '#AC394B';
+              } else {
+                return '#FFF';
+              }
+            }
+          }
+        }
+      }
+      return '#222';
+    })
+}
 
 
 
@@ -97,7 +132,7 @@ function addBoxes(){
 function drawMap(){
   // Load data
   d3.json("../data/maps/final/world.json",function(error,geodata) {
-  d3.csv("../data/other/CC.csv",function(error2,cCode) {
+  d3.csv("../data/other/CCFin.csv",function(error2,cCode) {
   d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
   d3.csv("../data/COW/Inter-StateWarData_v4.0.csv", types, function(error4, cow) {
       if (error) return console.log(error);
@@ -139,19 +174,20 @@ function drawMap(){
 
       // Set up hashes
       cCode.forEach(function(d, i) {
-          countryhash[d.CId] = d;
+          countryhashCOW[d.cowCode] = d;
+          countryhashMap[d.CId] = d;
       });
 
       cow.forEach(function(d, i){
         // Add this specific country
-        var tmpTxt = '<div class="waritem"><div class="warT ';
+        var tmpTxt = '<div class="waritem" id="'+d.WarNum+'"><div class="warT ';
         var tmpOut = d.Outcome;
         if(tmpOut == 1){
           tmpTxt += 'stWin';
         } else if (tmpOut == 2){
           tmpTxt += 'stLose';
         }
-        tmpTxt += ' "><b>'+ d.StateName+'</b></div>';
+        tmpTxt += '"><b>'+ d.StateName+'</b></div>';
         if(1 == d.Initiator){
           tmpTxt += '<div class="warV">Initiator,&nbsp;&nbsp;';
         } else {
@@ -188,26 +224,45 @@ function drawMap(){
         .append("path")
         .attr("class", "countries")
         .attr("d",path)
-        .attr("class", function(d) {
+        .attr("id", function(d) {
           return d.id;
         })
         .style("fill", "#222")
         .on("mouseover", function(d) {
           d3.select(this)
-            .style("fill", "#aaa");
-          d3.select("#countryId")
-            .select("#cId")
-            .text(d.id);
+            .style("fill", function(){
+              currCol = $(this).attr('style')
+              currCol = currCol.substring((currCol.length - 7), (currCol.length - 1));
+              return "#aaa";
+            });
           d3.select("#countryId")
             .select("#cName")
-            .text(countryhash[d.id]["CName"]);
+            .text(function(){
+              var tmp = countryhashMap[d.id];
+              if(tmp != undefined){
+                return tmp['StateName'];
+              }
+              return '';
+            });
         })
         .on("mouseout", function() {
           d3.select(this)
-            .style("fill", "#222")
+            .style("fill", function(){
+              return currCol;
+            })
+        })
+        .on("click", function(d) {
+          var tmp = countryhashMap[d.id];
+          if(tmp != undefined){
+            countryFilter = tmp['cowCode'];
+            addBoxes();
+          } else {
+            countryFilter = 0;
+          }
+          return;
         });
 
-      // Add dots for incidents
+      // Add dots for inCCodeents
       // g.selectAll(".circ")
       //   .data(mid)
       //   .enter()
@@ -226,7 +281,6 @@ function drawMap(){
      
 
       // Show axis
-
       var navWidth = width * 3/4,
         navHeight = 20;
 
@@ -319,9 +373,19 @@ function drawMap(){
 }
 drawMap();
 
+function accordChange(){
+  var warNum = $(this).find(">:first-child").attr('id');
+  var warData = warhash[warNum];
+  recolor(warData);
+}
+
+function accordClose(){
+  g.selectAll("path")
+    .style("fill", "#222");
+}
+
 $( document ).ready(function() {
-  $('.ui.accordion')
-    .accordion();
+  $('.ui.accordion').accordion();
 
   function warheight(){
     $('#warBox').css('height', window.innerHeight);

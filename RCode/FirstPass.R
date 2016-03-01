@@ -1,6 +1,5 @@
 MID_raw = read.csv("../data/MilitarizedInterstateDisputes/MIDa_4.01.csv", header=TRUE, stringsAsFactors=FALSE)
 loc_raw = read.csv("../data/MilitarizedInterstateDisputes/MIDLOC_1.1.csv", header=TRUE, stringsAsFactors=FALSE)
-cc = read.csv("../data/other/CC.csv", header=TRUE, stringsAsFactors=FALSE)
 
 
 MID_f = MID_raw[c("DispNum3", "StDay", "StMon", "StYear", "EndDay", "EndMon", "EndYear", "Outcome", "Settle", "Fatality", "HiAct", "HostLev", "Recip", "NumA", "NumB", "Ongo2010")]

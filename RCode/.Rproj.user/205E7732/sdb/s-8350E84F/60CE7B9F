@@ -1,0 +1,16 @@
+{
+    "contents" : "cc = read.csv(\"../data/other/CountryCodes.csv\", header=TRUE, stringsAsFactors=FALSE)\ncc2 = cc[c(\"ISO.3166.1.Number\", \"Common.Name\", \"ISO.3166.1.2.Letter.Code\", \"ISO.3166.1.3.Letter.Code\",\"Formal.Name\")]\nnames(cc2) = c(\"CId\", \"CName\", \"C2code\", \"C3code\", \"FormName\")\ncow = read.csv(\"../data/other/COWCC.csv\", header=TRUE, stringsAsFactors=FALSE)\nnames(cow) = c(\"C3code\", \"cowCode\", \"StateName\")\ncow2 = cow[!duplicated(cow$C3code),]\n\n#merge\nm1 = merge(cc2, cow2, by=\"C3code\", all=FALSE)\nm1=m1[,-3]\nm2 = merge(cc2, cow2, by.x=\"CName\", by.y=\"StateName\", all=FALSE)\nm2=m2[,-4]\nnames(m2) = c(\"StateName\", \"CId\", \"C2code\", \"FormName\", \"C3code\", \"cowCode\")\nm3 = merge(cc2, cow2, by.x=\"FormName\", by.y=\"StateName\", all=FALSE)\nm3=m3[,-5]\nnames(m3) = c(\"FormName\", \"CId\", \"StateName\", \"C2code\", \"C3code\", \"cowCode\")\n\n#compile\nbind = rbind(m1, m2, m3)\nfin = bind[!duplicated(bind$C3code),]\n\nfin2 = merge(fin, cow2, by=\"cowCode\", all.y=TRUE)\nfin2=fin2[,c(-2, -4, -5, -6)]\nnames(fin2) = c(\"cowCode\", \"CId\", \"C3code\", \"StateName\")\n\nwrite.csv(fin2, \"../data/other/CCFin.csv\", na=\"0\", row.names=FALSE)\n\n",
+    "created" : 1456817269258.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1957096787",
+    "id" : "60CE7B9F",
+    "lastKnownWriteTime" : 1456819308,
+    "path" : "~/Desktop/Winter_2016/DataViz/Wars/RCode/CC.R",
+    "project_path" : "CC.R",
+    "properties" : {
+    },
+    "source_on_save" : false,
+    "type" : "r_source"
+}
