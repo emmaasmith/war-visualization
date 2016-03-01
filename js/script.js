@@ -34,7 +34,7 @@ var yi = "08",
     yf = "09";
 
 var newRad = 20000;
-var currCol;
+var currCol='', currCol2='', clicked=0;
 var countryFilter = 0;
 
 var dataOptions;
@@ -126,6 +126,10 @@ function recolor(warData){
     })
 }
 
+function allblack(){
+  g.selectAll("path")
+    .style("fill", '#000');
+}
 
 
 // Create the map
@@ -231,9 +235,13 @@ function drawMap(){
         .on("mouseover", function(d) {
           d3.select(this)
             .style("fill", function(){
-              currCol = $(this).attr('style')
-              currCol = currCol.substring((currCol.length - 7), (currCol.length - 1));
-              return "#aaa";
+              if (clicked!=0 && clicked == d.id){
+                return '#fff';
+              }else{
+                currCol = $(this).attr('style');
+                currCol = currCol.substring((currCol.length - 7), (currCol.length - 1));
+                return "#aaa";
+              }
             });
           d3.select("#countryId")
             .select("#cName")
@@ -242,16 +250,32 @@ function drawMap(){
               if(tmp != undefined){
                 return tmp['StateName'];
               }
-              return '';
+              return '.';
             });
         })
         .on("mouseout", function() {
           d3.select(this)
-            .style("fill", function(){
-              return currCol;
+            .style("fill", function(d){
+              if (clicked!=0 && clicked == d.id){
+                return '#fff';
+              } else {
+                return currCol;
+              }
             })
         })
         .on("click", function(d) {
+          d3.select(this)
+            .style("fill", function(){
+              if(clicked==0 || clicked != d.id){
+                clicked=d.id;
+                currCol2 = $(this).attr('style');
+                currCol2 = currCol2.substring((currCol2.length - 7), (currCol2.length - 1));
+                return '#fff';
+              } else {
+                clicked = 0;
+                return currCol2;
+              }
+            })
           var tmp = countryhashMap[d.id];
           if(tmp != undefined){
             countryFilter = tmp['cowCode'];
