@@ -34,7 +34,7 @@ var yi = "08",
     yf = "09";
 
 var newRad = 20000;
-var currCol='', currCol2='', clicked=0;
+var currCol = '', clicked = 0;
 var countryFilter = 0;
 
 var dataOptions;
@@ -125,11 +125,10 @@ function recolor(warData){
       return '#222';
     })
 }
-
 function allblack(){
   g.selectAll("path")
-    .style("fill", '#000');
-}
+    .style("stroke-width", '0px');
+  }
 
 
 // Create the map
@@ -233,15 +232,13 @@ function drawMap(){
         })
         .style("fill", "#222")
         .on("mouseover", function(d) {
+          console.log("1 "+currCol);
           d3.select(this)
             .style("fill", function(){
-              if (clicked!=0 && clicked == d.id){
-                return '#fff';
-              }else{
-                currCol = $(this).attr('style');
-                currCol = currCol.substring((currCol.length - 7), (currCol.length - 1));
-                return "#aaa";
-              }
+              currCol = $(this).attr('style');
+              currCol = currCol.substring(6, 13);
+              console.log("2 "+currCol);
+              return "#aaa";
             });
           d3.select("#countryId")
             .select("#cName")
@@ -250,32 +247,30 @@ function drawMap(){
               if(tmp != undefined){
                 return tmp['StateName'];
               }
-              return '.';
+              return '';
             });
         })
-        .on("mouseout", function() {
+        .on("mouseout", function(d) {
+          console.log("3 "+currCol);
           d3.select(this)
-            .style("fill", function(d){
-              if (clicked!=0 && clicked == d.id){
-                return '#fff';
-              } else {
-                return currCol;
-              }
+            .style("fill", function(){
+              return currCol;
             })
         })
         .on("click", function(d) {
-          d3.select(this)
-            .style("fill", function(){
-              if(clicked==0 || clicked != d.id){
-                clicked=d.id;
-                currCol2 = $(this).attr('style');
-                currCol2 = currCol2.substring((currCol2.length - 7), (currCol2.length - 1));
-                return '#fff';
-              } else {
-                clicked = 0;
-                return currCol2;
-              }
-            })
+          if(clicked == 0 || clicked != d.id){
+            clicked = d.id;
+            allblack();
+            d3.select(this)
+              .style({
+                stroke: '#fff',
+                'stroke-width': '5px'
+              });
+          } else {
+            clicked = 0;
+            d3.select(this)
+            .style('stroke-width', '0px');
+          }
           var tmp = countryhashMap[d.id];
           if(tmp != undefined){
             countryFilter = tmp['cowCode'];
