@@ -1,7 +1,6 @@
 html, body{
   background-color: #E8E8E8;
   font-family: "Roboto Slab", serif;
-  font-weight: 100;
   font-size: 100%;
   width: 100%;
 }
@@ -47,9 +46,9 @@ line {
   font-size: 0.8em;
 }
 #warBox{
-  position: absolute;
-  top: 130px;
-  left: 820px;
+  position: fixed;
+  top: 0px;
+  right: 0px;
   height: 600px;
   width:250px;
   overflow: scroll;
@@ -58,13 +57,28 @@ line {
   display: block;
   margin-bottom: 10px;
 }
+.waritem:not(:last-child) {
+  margin-bottom: 10px;
+}
 .warT {
   display: inline-block;
-  width:100px;
+  width:80px;
+  color:rgba(0, 0, 0, 1);
+}
+.stWin{
+  text-decoration: underline;
+  -webkit-text-decoration-color: #3C9EB4;
+  text-decoration-color: #3C9EB4;
+}
+.stLose{
+  text-decoration: underline;
+  -webkit-text-decoration-color: #AC394B;
+  text-decoration-color: #AC394B;
 }
 .warV {
   display: inline-block;
   width:150px;
+  color:rgba(0, 0, 0, 1);
 }
 #lTime{
   top:610px;

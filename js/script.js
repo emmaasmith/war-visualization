@@ -59,28 +59,35 @@ function zeropad(x){
   return zeros.substring(0, (zeros.length - val.length)) + val;
 }
 
-function recolor(){
+function addBoxes(){
+  var tmpHTML = '', allHTML = '';
+
+  for (d in warhash) {
+    tmpHTML = '<div id="' + warhash[d]['name'] +
+      '" class="ui styled accordion"><div class="title"><i class="dropdown icon"></i>'+
+      warhash[d]['min'].getFullYear() + '-' + warhash[d]['max'].getFullYear() + 
+      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
+      warhash[d]['name'] + '</div><div class="content">';
+
+    if (warhash[d]['min'] > rounded[0].getTime() && 
+      warhash[d]['max'] < rounded[1].getTime()){
+
+      for(e in warhash[d]){
+        if(warhash[d][e]['txt'] != undefined){
+          tmpHTML += warhash[d][e]['txt'];
+        }
+      };
+
+      tmpHTML += '</div></div>';
+      allHTML += tmpHTML;
+    }
+
+    tmpHTML = '';
+  };
+
   d3.select("#warBox")
-    .html('');
-  g.selectAll(".circ")
-    .classed("hidden", function(d) {
-      if (d.StDateP.getTime() > rounded[0].getTime() && 
-        d.StDateP.getTime() < rounded[1].getTime()){
-        d3.select("#warBox")
-          .append('div')
-          .attr("class","waritem")
-          .html(function(d){
-            var tmpTxt = '<div id="w'+ d.WarNum +
-              '" class="ui accordion"><div class="active title">'+
-              d.WarName+'</div><div class="active content">' +
-              d.txt + '</div></div>';
-            return tmpTxt;
-          });
-        return false;
-      } else {
-        return true;
-      }
-    });
+    .html(allHTML);
+  $('.ui.accordion').accordion('refresh');
 }
 
 
@@ -98,12 +105,9 @@ function drawMap(){
       if (error3) return console.log(error3);
       if (error4) return console.log(error4);
 
-      console.log(cow);
-
       // Hard-code discrete variables
       function buildCodes(){
         codehash['Region'] = new Object();
-        codehash['Initiator'] = new Object();
         codehash['Outcome'] = new Object();
 
         codehash['Region'][1] = "W. Hemisphere";
@@ -121,14 +125,11 @@ function drawMap(){
         codehash['Region'][17] = "Asia & Oceania";
         codehash['Region'][18] = "Africa & Middle East";
         codehash['Region'][19] = "Europe, Africa, Middle East, Asia & Oceania";
-
-        codehash['Initiator'][1] = "Yes";
-        codehash['Initiator'][2] = "No";
         
         codehash['Outcome'][1] = "Victor";
         codehash['Outcome'][2] = "Loser";
         codehash['Outcome'][3] = "Compromise/Tied";
-        codehash['Outcome'][4] = "Transformed into new war";
+        codehash['Outcome'][4] = "Transformed to new war";
         codehash['Outcome'][5] = "Ongoing";
         codehash['Outcome'][6] = "Stalemate";
         codehash['Outcome'][7] = "Continuing low-level conflict";
@@ -143,27 +144,42 @@ function drawMap(){
 
       cow.forEach(function(d, i){
         // Add this specific country
-        var tmpTxt = '<div class="warT"><b>'+d.StateName+'</b></div>';
-        if(d.Side == d.Initiator && d.Side == d.Outcome){
-          tmpTxt += '<div class="warV">Initiator, Victor</div><br>';
-        } else if (d.Side == d.Initiator){
-          tmpTxt += '<div class="warV">Initiator, Defeated</div><br>';
-        } else if (d.Side == d.Outcome){
-          tmpTxt += '<div class="warV">Victor</div><br>';
-        } else {
-          tmpTxt += '<div class="warV">Defeated</div><br>';
+        var tmpTxt = '<div class="waritem"><div class="warT ';
+        var tmpOut = d.Outcome;
+        if(tmpOut == 1){
+          tmpTxt += 'stWin';
+        } else if (tmpOut == 2){
+          tmpTxt += 'stLose';
         }
-        tmpTxt += '<div class="warT"><b>Fatalities</b></div><div class="warV">'+
-          d.BatDeath+'</div><br>';
+        tmpTxt += ' "><b>'+ d.StateName+'</b></div>';
+        if(1 == d.Initiator){
+          tmpTxt += '<div class="warV">Initiator,&nbsp;&nbsp;';
+        } else {
+          tmpTxt += '<div class="warV">';
+        }
+        tmpTxt += codehash['Outcome'][tmpOut]+'</div><br>';
+        tmpTxt += '<div class="warT">Fatalities:</div><div class="warV">'+
+          d.BatDeath+'</div><br></div>';
 
         d['txt'] = tmpTxt;
 
+        // If first time encountering a war
         if(warhash[d.WarNum] == undefined){
           warhash[d.WarNum] = new Object();
+          warhash[d.WarNum]['min'] = d.StDateP;
+          warhash[d.WarNum]['max'] = d.EndDateP;
+          warhash[d.WarNum]['name'] = d.WarName;
+        } else {
+          if (warhash[d.WarNum]['min'] > d.StDateP){
+            warhash[d.WarNum]['min'] = d.StDateP;
+          }
+          if (warhash[d.WarNum]['max'] > d.EndDateP){
+            warhash[d.WarNum]['max'] = d.EndDateP;
+          }
         }
         warhash[d.WarNum][d.StateName] = d;
       });
-      console.log(warhash);
+      
 
       // Draw map
       g.selectAll("path")
@@ -247,14 +263,15 @@ function drawMap(){
         yi = yearString(rounded[0]);
         yf = yearString(rounded[1]);
 
-        recolor();
+        addBoxes();
       }   
       
 
       // Bottom nav
+      rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
       var brush = d3.svg.brush()
         .x(navX)
-        .extent([new Date(1900, 11, 31), new Date(1950, 11, 31)])
+        .extent(rounded)
         .on("brushend", brushfn);
 
       // Grid bg
@@ -294,7 +311,7 @@ function drawMap(){
         .attr("transform", "translate(160," + (height - 50) + ")")
         .call(xAxis);
 
-      recolor();
+      addBoxes();
   });          
   });
   });
@@ -303,6 +320,15 @@ function drawMap(){
 drawMap();
 
 $( document ).ready(function() {
+  $('.ui.accordion')
+    .accordion();
+
+  function warheight(){
+    $('#warBox').css('height', window.innerHeight);
+  }
+  warheight();
+
+  window.onresize = warheight;
   // $('#valChanges').submit(function (e){
   //   neutr = $('.Nneutr').val();
   //   green = $('.Ngreen').val();
