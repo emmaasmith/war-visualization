@@ -16,6 +16,8 @@ var svg = d3.select("body").append("svg")
     .attr("height", height);
 var g = svg.append("g")
     .attr("id", "mapSVG");
+var navg = svg.append('g')
+    .attr('id', 'timeline');
 
 var colorVarType = "HIVstage3Rates_",
     colorVarYear = "08",
@@ -38,8 +40,10 @@ var currCol = '', clicked = 0;
 var countryFilter = 0;
 
 var dataOptions;
+var navX, navY;
 
 var rounded;
+var navHeight, navWidth;
 
 var tmpSt, tmpEnd, dateRange;
 var dateFormat = d3.time.format("%x").parse;
@@ -85,6 +89,11 @@ function addBoxes(){
           }
           tmpHTML += warhash[d][e]['txt'];
         }
+
+
+        navg.append('g')
+          .selectAll(".tlcirc")
+
       };
 
       tmpHTML += '</div></div>';
@@ -101,6 +110,17 @@ function addBoxes(){
   d3.select("#warBox")
     .html(allHTML);
   $('.ui.accordion').accordion('refresh');
+
+  navg
+    .selectAll(".tlcirc")
+    .style("fill", function(d){
+      if(d['StDateP'] != undefined && 
+        d['StDateP'].getTime() > rounded[0] && d['StDateP'].getTime() < rounded[1]){
+        return "#222";
+      } else {
+        return "#bbb";
+      }
+    })
 }
 
 function recolor(warData){
@@ -116,7 +136,7 @@ function recolor(warData){
               } else if (warData[i]['Outcome']==2){
                 return '#AC394B';
               } else {
-                return '#FFF';
+                return '#F2EFD9';
               }
             }
           }
@@ -125,10 +145,22 @@ function recolor(warData){
       return '#222';
     })
 }
+
 function allblack(){
   g.selectAll("path")
     .style("stroke-width", '0px');
-  }
+}
+
+function changeCheck(e){
+  var isChecked = e.checked;
+  if(isChecked){
+    g.selectAll(".circ")
+      .style("visibility", "visible");
+  } else {
+    g.selectAll(".circ")
+      .style("visibility", "hidden");
+  } 
+}
 
 
 // Create the map
@@ -225,6 +257,7 @@ function drawMap(){
         .data(topojson.feature(geodata,geodata.objects.countries).features) 
         .enter()
         .append("path")
+        .attr("transform", "translate(0," + -60 + ")")
         .attr("class", "countries")
         .attr("d",path)
         .attr("id", function(d) {
@@ -232,12 +265,10 @@ function drawMap(){
         })
         .style("fill", "#222")
         .on("mouseover", function(d) {
-          console.log("1 "+currCol);
           d3.select(this)
             .style("fill", function(){
               currCol = $(this).attr('style');
               currCol = currCol.substring(6, 13);
-              console.log("2 "+currCol);
               return "#aaa";
             });
           d3.select("#countryId")
@@ -251,7 +282,6 @@ function drawMap(){
             });
         })
         .on("mouseout", function(d) {
-          console.log("3 "+currCol);
           d3.select(this)
             .style("fill", function(){
               return currCol;
@@ -300,89 +330,152 @@ function drawMap(){
      
 
       // Show axis
-      var navWidth = width * 3/4,
-        navHeight = 20;
+      function buildBrush(){
+        navWidth = width * 3/4;
+        navHeight = 80;
 
-      dateRange = cow.map(function(d) { return d.StDateP });
-      dateRange = dateRange.concat(cow.map(function(d) { return d.EndDateP }));
-      dateRange = d3.extent(dateRange);
+        dateRange = cow.map(function(d) { return d.StDateP });
+        dateRange = dateRange.concat(cow.map(function(d) { return d.EndDateP }));
+        dateRange = d3.extent(dateRange);
 
-      var navX = d3.time.scale()
-        .domain(dateRange)
-        .range([0, navWidth-1]);
+        navX = d3.time.scale()
+          .domain(dateRange)
+          .range([0, navWidth-1]);
 
-      var xAxis = d3.svg.axis()
-        .scale(navX)
-        .orient("bottom")
-        .ticks(7);
+        var xAxis = d3.svg.axis()
+          .scale(navX)
+          .orient("bottom")
+          .ticks(7);
 
-      // Brush fn
-      function brushfn() {
-        if (!d3.event.sourceEvent) return;
+        // Brush fn
+        function brushfn() {
+          if (!d3.event.sourceEvent) return;
 
-        var selected = brush.extent();
-        rounded = selected.map(d3.time.year.round);
+          var selected = brush.extent();
+          rounded = selected.map(d3.time.year.round);
 
-        if (!(rounded[0] < rounded[1])) {
-          rounded[0] = d3.time.year.floor(selected[0]);
-          rounded[1] = d3.time.year.ceil(selected[1]);
-        }
+          if (!(rounded[0] < rounded[1])) {
+            rounded[0] = d3.time.year.floor(selected[0]);
+            rounded[1] = d3.time.year.ceil(selected[1]);
+          }
 
-        d3.select(this).transition()
-            .call(brush.extent(rounded))
-            .call(brush.event);
+          d3.select(this).transition()
+              .call(brush.extent(rounded))
+              .call(brush.event);
 
-        var yearString = d3.time.format("%y");
-        yi = yearString(rounded[0]);
-        yf = yearString(rounded[1]);
+          var yearString = d3.time.format("%y");
+          yi = yearString(rounded[0]);
+          yf = yearString(rounded[1]);
 
-        addBoxes();
-      }   
-      
+          addBoxes();
+        }   
+        
 
-      // Bottom nav
-      rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
-      var brush = d3.svg.brush()
-        .x(navX)
-        .extent(rounded)
-        .on("brushend", brushfn);
+        // Bottom nav
+        rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
+        var brush = d3.svg.brush()
+          .x(navX)
+          .extent(rounded)
+          .on("brushend", brushfn);
 
-      // Grid bg
-      svg.append("rect")
-        .attr("class", "brushBG")
-        .attr("width", navWidth)
-        .attr("height", navHeight)
-        .attr("x", 160)
-        .attr("y", (height));
+        navg.append("g")
+          .attr("class", "brushGrid")
+          .attr("transform", "translate(160," + (height - 50) + ")")
+          .call(d3.svg.axis()
+              .scale(navX)
+              .orient("bottom")
+              .ticks(d3.time.month, 1)
+              .tickSize(-navHeight)
+              .tickFormat(""))
+          .selectAll(".tick")
+        .classed("minor", function(d) { 
+          return d.getMonth(); 
+        });    
 
-      svg.append("g")
-        .attr("class", "brushGrid")
-        .attr("transform", "translate(160," + (height - 50) + ")")
-        .call(d3.svg.axis()
-            .scale(navX)
-            .orient("bottom")
-            .ticks(d3.time.month, 1)
-            .tickSize(-navHeight)
-            .tickFormat(""))
-        .selectAll(".tick")
-      .classed("minor", function(d) { 
-        return d.getMonth(); 
-      });    
+      // Set up brush
+       var gBrush = navg.append("g")
+          .attr('class', 'brush')
+          .attr("transform", "translate(160," + (height - navHeight - 50) + ")")
+          .call(brush);
 
-    // Set up brush
-     var gBrush = svg.append("g")
-        .attr('class', 'brush')
-        .attr("transform", "translate(160," + (height - 70) + ")")
-        .call(brush);
+        gBrush.selectAll('rect')
+          .attr('height', navHeight);
 
-      gBrush.selectAll('rect')
-        .attr('height', navHeight);
+        d3.select('svg')
+          .append('g')
+          .attr('id', 'xAxis')
+          .attr("transform", "translate(160," + (height - 50) + ")")
+          .call(xAxis);
+      }
+      buildBrush();
+
+      // Add dots
+      var domY = d3.extent(cow.map(function(d) {
+        return Number(d.BatDeath);
+      }));
+      domY[0] = 1;
+      domY[1] = Number(domY[1]);
+
+      navY = d3.scale.log().base(Math.E)
+        .domain(domY)
+        .range([navHeight-1, 0]);
+
+      var tickctr=0;
+      var yAxis = d3.svg.axis()
+        .scale(navY)
+        .orient("left")
+        .ticks(0)
+        .tickFormat(function (d) {
+          tickctr++;
+          if(tickctr%3==1){
+            return d.toFixed(0);
+          } else {
+            return ''
+          }
+        });
 
       d3.select('svg')
         .append('g')
-        .attr('id', 'xAxis')
-        .attr("transform", "translate(160," + (height - 50) + ")")
-        .call(xAxis);
+        .attr('id', 'yAxis')
+        .attr("transform", "translate(160," + (height - navHeight- 50) + ")")
+        .call(yAxis);
+
+      navg.append('g')
+        .attr("id", "scatterlabel")
+        .attr("transform", "translate(120," + (height- 60) + ")")
+        .append('text')
+        .attr("class", "label2")
+        .style("text-anchor", "center")
+        .attr("transform", "rotate(-90)")
+        .text("Fatalities by country");
+      navg.select('#scatterlabel')
+        .append('text')
+        .attr("class", "label1")
+        .style("text-anchor", "center")
+        .attr("transform", "rotate(-90)")
+        .attr("dx", "2em")
+        .attr("dy", "1em")
+        .text("log scale");
+
+      navg.append('g')
+        .selectAll(".tlcirc")
+        .data(cow)
+        .enter()
+        .append("circle")
+        .attr("transform", "translate(160," + (height - navHeight- 50) + ")")
+        .attr("class", "tlcirc")
+        .attr('d', path)
+        .attr("cx", function(d) {
+          return navX(d.StDateP.getTime());
+        })
+        .attr("cy", function(d) {
+          if(Number(d['BatDeath']) > 0){
+            return navY(Number(d['BatDeath']));
+          } else {
+            return 0;
+          }
+        })
+        .attr("r", 0.5);
 
       addBoxes();
   });          

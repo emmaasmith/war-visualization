@@ -683,13 +683,15 @@ input::selection {
 
 /* Default Styling */
 
-.ui.accordion .title:not(.ui) {
+.ui.accordion .title:not(.ui), .tiny {
   padding: 0.5em 0em;
   font-family: 'Lato', 'Helvetica Neue', Arial, Helvetica, sans-serif;
   font-size: 1em;
   /*color: rgba(0, 0, 0, 0.87);*/
 }
-
+.tiny{
+  font-size: 0.7em;
+}
 /* Content */
 
 .ui.accordion .title ~ .content,
