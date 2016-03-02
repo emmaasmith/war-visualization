@@ -30,6 +30,8 @@ var mphash = new Object();
 var warhash = new Object();
 var codehash = [];
 
+var warOpen;
+
 var neutr = 8,
     green = 16,
     domVal = [0, neutr, green];
@@ -89,12 +91,19 @@ function addBoxes(){
 
   for (d in warhash) {
     hasCtry = 0;
-
     tmpHTML = '<div id="' + warhash[d]['name'] +
-      '" class="ui styled accordion"><div class="title"><i class="dropdown icon"></i>'+
-      warhash[d]['min'].getFullYear() + '-' + warhash[d]['max'].getFullYear() + 
-      '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
-      warhash[d]['name'] + '</div><div class="content">';
+      '" class="ui styled accordion"><div class="title';
+    if(warhash[d]['name'] == warOpen){
+      tmpHTML += ' active"><i class="dropdown icon"></i>'+
+        warhash[d]['min'].getFullYear() + '-' + warhash[d]['max'].getFullYear() + 
+        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
+        warhash[d]['name'] + '</div><div class="active content">';
+    } else {
+      tmpHTML += '"><i class="dropdown icon"></i>'+
+        warhash[d]['min'].getFullYear() + '-' + warhash[d]['max'].getFullYear() + 
+        '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
+        warhash[d]['name'] + '</div><div class="content">';
+    }
 
     if (warhash[d]['min'] > rounded[0].getTime() && 
       warhash[d]['max'] < rounded[1].getTime()){
@@ -123,11 +132,12 @@ function addBoxes(){
     .html(allHTML);
   $('.ui.accordion').accordion('refresh');
 
-  navg
-    .selectAll(".tlcirc")
+  navg.selectAll(".tlcirc")
     .style("fill", function(d){
       if(d['StDateP'] != undefined && 
-        d['StDateP'].getTime() > rounded[0] && d['StDateP'].getTime() < rounded[1]){
+        d['StDateP'].getTime() > rounded[0] 
+        && d['StDateP'].getTime() < rounded[1]
+        && (clicked == 0 || countryhashMap[clicked]['cowCode'] == d['ccode'])){
         if(d['Outcome'] == 1){
           return '#3C9EB4';
         } else if(d['Outcome'] == 2){
@@ -140,9 +150,14 @@ function addBoxes(){
     })
     .attr("r", function(d){
       if(d['StDateP'] != undefined && 
-        d['StDateP'].getTime() > rounded[0] && d['StDateP'].getTime() < rounded[1]){
+        d['StDateP'].getTime() > rounded[0] 
+        && d['StDateP'].getTime() < rounded[1]
+        && (clicked == 0 || countryhashMap[clicked]['cowCode'] == d['ccode'])){
         if(d['Outcome'] == 1 || d['Outcome'] == 2){
-          return 1;
+          if (clicked ==0){
+            return 1;
+          }
+          return 3;
         }
         return 0.5;
       }
@@ -154,10 +169,8 @@ function recolor(warData){
   g.selectAll("path")
     .style("fill", function(d) {
       var tmpID = countryhashMap[d.id];
-
       if(tmpID != undefined){
         var cName = Number(tmpID['cowCode']);
-
         for (i in warData){
           if(warData[i]['ccode'] != undefined){
             if (cName == Number(warData[i]['ccode'])){
@@ -247,8 +260,13 @@ function drawMap(){
           mphash[d.ccode] = d;
       });
 
+      var tmpCTRY = '';
       nmc.forEach(function(d, i) {
-          nmchash[d.ccode] = d;
+          if(tmpCTRY != d.ccode){
+            tmpCTRY = d.ccode;
+            nmchash[d.ccode] = new Object();
+          }
+          nmchash[d.ccode][d.year] = d;
       });
 
       cow.forEach(function(d, i){
@@ -477,19 +495,19 @@ function drawMap(){
               }
               return '';
             });
-          d3.select("#countryId")
-            .select("#iME")
-            .text(function(){
-              var tmp = countryhashMap[d.id];
-              if(tmp != undefined){
-                var tmp2 = nmchash[tmp['cowCode']]['milex'];
-                if(tmp2 < 0){
-                  return ''
-                }
-                return nmchash[tmp['cowCode']]['milex'];
-              }
-              return '';
-            });
+          // d3.select("#countryId")
+          //   .select("#iME")
+          //   .text(function(){
+          //     var tmp = countryhashMap[d.id];
+          //     if(tmp != undefined){
+          //       var tmp2 = nmchash[tmp['cowCode']]['milex'];
+          //       if(tmp2 < 0){
+          //         return ''
+          //       }
+          //       return nmchash[tmp['cowCode']]['milex'];
+          //     }
+          //     return '';
+          //   });
         })
         .on("mouseout", function(d) {
           d3.select(this)
@@ -533,6 +551,7 @@ drawMap();
 function accordChange(){
   var warNum = $(this).find(">:first-child").attr('id');
   var warData = warhash[warNum];
+  warOpen = warhash[warNum]['name'];
   recolor(warData);
 }
 

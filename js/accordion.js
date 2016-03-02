@@ -563,8 +563,8 @@ $.fn.accordion.settings = {
 
   onOpening       : function(){}, // callback before open animation
   onOpen          : accordChange, // callback after open animation
-  onClosing       : accordClose, // callback before closing animation
-  onClose         : function(){}, // callback after closing animation
+  onClosing       : function(){}, // callback before closing animation
+  onClose         : accordClose, // callback after closing animation
   onChange        : function(){}, // callback after closing or opening animation
 
   error: {
