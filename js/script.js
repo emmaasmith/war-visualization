@@ -25,6 +25,8 @@ var colorVarType = "HIVstage3Rates_",
 
 var countryhashMap = new Object();
 var countryhashCOW = new Object();
+var nmchash = new Object();
+var mphash = new Object();
 var warhash = new Object();
 var codehash = [];
 
@@ -44,9 +46,17 @@ var navX, navY;
 
 var rounded;
 var navHeight, navWidth;
+var t;
 
 var tmpSt, tmpEnd, dateRange;
 var dateFormat = d3.time.format("%x").parse;
+
+// Set up textures
+t = textures.lines()
+  .thicker(10)
+  .thinner(4);
+svg.call(t);
+
 function types(d) {
   d.StDateP = dateFormat(zeropad(d.StartMonth1)+'/'+
     zeropad(d.StartDay1)+'/'+d.StartYear1);
@@ -57,6 +67,13 @@ function types(d) {
     d.EndDateP = dateFormat(zeropad(d.EndMonth2)+'/'+
       zeropad(d.EndDay2)+'/'+d.EndYear2);
   }
+  return d;
+}
+function types2(d) {
+  d.StDateP = dateFormat(zeropad(d.stmonth)+'/'+
+    zeropad(d.stday)+'/'+d.styear);
+  d.EndDateP = dateFormat(zeropad(d.endmonth)+'/'+
+    zeropad(d.endday)+'/'+d.endyear);
   return d;
 }
 
@@ -89,11 +106,6 @@ function addBoxes(){
           }
           tmpHTML += warhash[d][e]['txt'];
         }
-
-
-        navg.append('g')
-          .selectAll(".tlcirc")
-
       };
 
       tmpHTML += '</div></div>';
@@ -116,21 +128,39 @@ function addBoxes(){
     .style("fill", function(d){
       if(d['StDateP'] != undefined && 
         d['StDateP'].getTime() > rounded[0] && d['StDateP'].getTime() < rounded[1]){
-        return "#222";
+        if(d['Outcome'] == 1){
+          return '#3C9EB4';
+        } else if(d['Outcome'] == 2){
+          return '#AC394B';
+        }
+        return "#111";
       } else {
-        return "#bbb";
+        return "#aaa";
       }
     })
+    .attr("r", function(d){
+      if(d['StDateP'] != undefined && 
+        d['StDateP'].getTime() > rounded[0] && d['StDateP'].getTime() < rounded[1]){
+        if(d['Outcome'] == 1 || d['Outcome'] == 2){
+          return 1;
+        }
+        return 0.5;
+      }
+      return 0.5;
+    });
 }
 
 function recolor(warData){
   g.selectAll("path")
     .style("fill", function(d) {
-      if(countryhashMap[d.id] != undefined){
-        var cName = countryhashMap[d.id]['cowCode'];
+      var tmpID = countryhashMap[d.id];
+
+      if(tmpID != undefined){
+        var cName = Number(tmpID['cowCode']);
+
         for (i in warData){
           if(warData[i]['ccode'] != undefined){
-            if (cName == warData[i]['ccode']){
+            if (cName == Number(warData[i]['ccode'])){
               if(warData[i]['Outcome']==1){
                 return '#3C9EB4';
               } else if (warData[i]['Outcome']==2){
@@ -140,6 +170,13 @@ function recolor(warData){
               }
             }
           }
+        }
+        
+        var tmpMP = mphash[Number(tmpID['cowCode'])];
+        if(tmpMP != undefined &&
+          (tmpMP['StDateP'] < rounded[1] || 
+          tmpMP['EndDateP'] > rounded[0])){
+          return t.url();
         }
       }
       return '#222';
@@ -151,17 +188,6 @@ function allblack(){
     .style("stroke-width", '0px');
 }
 
-function changeCheck(e){
-  var isChecked = e.checked;
-  if(isChecked){
-    g.selectAll(".circ")
-      .style("visibility", "visible");
-  } else {
-    g.selectAll(".circ")
-      .style("visibility", "hidden");
-  } 
-}
-
 
 // Create the map
 function drawMap(){
@@ -170,10 +196,14 @@ function drawMap(){
   d3.csv("../data/other/CCFin.csv",function(error2,cCode) {
   d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
   d3.csv("../data/COW/Inter-StateWarData_v4.0.csv", types, function(error4, cow) {
+  d3.csv("../data/SystemMembership_MajorPower/majors2011.csv", types2, function(error5, mp) {
+  d3.csv("../data/NationalMaterialCapabilities/NMC_v4_0.csv", function(error6, nmc) {
       if (error) return console.log(error);
       if (error2) return console.log(error2);
       if (error3) return console.log(error3);
       if (error4) return console.log(error4);
+      if (error5) return console.log(error5);
+      if (error6) return console.log(error6);
 
       // Hard-code discrete variables
       function buildCodes(){
@@ -213,6 +243,14 @@ function drawMap(){
           countryhashMap[d.CId] = d;
       });
 
+      mp.forEach(function(d, i) {
+          mphash[d.ccode] = d;
+      });
+
+      nmc.forEach(function(d, i) {
+          nmchash[d.ccode] = d;
+      });
+
       cow.forEach(function(d, i){
         // Add this specific country
         var tmpTxt = '<div class="waritem" id="'+d.WarNum+'"><div class="warT ';
@@ -250,84 +288,6 @@ function drawMap(){
         }
         warhash[d.WarNum][d.StateName] = d;
       });
-      
-
-      // Draw map
-      g.selectAll("path")
-        .data(topojson.feature(geodata,geodata.objects.countries).features) 
-        .enter()
-        .append("path")
-        .attr("transform", "translate(0," + -60 + ")")
-        .attr("class", "countries")
-        .attr("d",path)
-        .attr("id", function(d) {
-          return d.id;
-        })
-        .style("fill", "#222")
-        .on("mouseover", function(d) {
-          d3.select(this)
-            .style("fill", function(){
-              currCol = $(this).attr('style');
-              currCol = currCol.substring(6, 13);
-              return "#aaa";
-            });
-          d3.select("#countryId")
-            .select("#cName")
-            .text(function(){
-              var tmp = countryhashMap[d.id];
-              if(tmp != undefined){
-                return tmp['StateName'];
-              }
-              return '';
-            });
-        })
-        .on("mouseout", function(d) {
-          d3.select(this)
-            .style("fill", function(){
-              return currCol;
-            })
-        })
-        .on("click", function(d) {
-          if(clicked == 0 || clicked != d.id){
-            clicked = d.id;
-            allblack();
-            d3.select(this)
-              .style({
-                stroke: '#fff',
-                'stroke-width': '5px'
-              });
-          } else {
-            clicked = 0;
-            d3.select(this)
-            .style('stroke-width', '0px');
-          }
-          var tmp = countryhashMap[d.id];
-          if(tmp != undefined){
-            countryFilter = tmp['cowCode'];
-            addBoxes();
-          } else {
-            countryFilter = 0;
-          }
-          return;
-        });
-
-      // Add dots for inCCodeents
-      // g.selectAll(".circ")
-      //   .data(mid)
-      //   .enter()
-      //   .append("circle")
-      //   .style("fill", "red")
-      //   .attr("class", "circ")
-      //   .attr('d', path)
-      //   .attr("cx", function(d) {
-      //     return projection([d.longitude, d.latitude])[0];
-      //   })
-      //   .attr("cy", function(d) {
-      //     return projection([d.longitude, d.latitude])[1];
-      //   })
-      //   .attr("r", 0.5);
-
-     
 
       // Show axis
       function buildBrush(){
@@ -442,7 +402,7 @@ function drawMap(){
 
       navg.append('g')
         .attr("id", "scatterlabel")
-        .attr("transform", "translate(120," + (height- 60) + ")")
+        .attr("transform", "translate(120," + (height- 55) + ")")
         .append('text')
         .attr("class", "label2")
         .style("text-anchor", "center")
@@ -453,8 +413,8 @@ function drawMap(){
         .attr("class", "label1")
         .style("text-anchor", "center")
         .attr("transform", "rotate(-90)")
-        .attr("dx", "2em")
-        .attr("dy", "1em")
+        .attr("dx", "3em")
+        .attr("dy", "1.5em")
         .text("log scale");
 
       navg.append('g')
@@ -477,8 +437,93 @@ function drawMap(){
         })
         .attr("r", 0.5);
 
+
+      // Draw map
+      g.selectAll("path")
+        .data(topojson.feature(geodata,geodata.objects.countries).features) 
+        .enter()
+        .append("path")
+        .attr("transform", "translate(0," + -60 + ")")
+        .attr("class", "countries")
+        .attr("d",path)
+        .attr("id", function(d) {
+          return d.id;
+        })
+        .style("fill", function(d){
+          var tmpID = countryhashMap[d.id];
+          if(tmpID != undefined){
+            var tmpMP = mphash[Number(tmpID['cowCode'])];
+            if(tmpMP != undefined &&
+              (tmpMP['StDateP'] < rounded[1] || 
+              tmpMP['EndDateP'] > rounded[0])){
+              return t.url();
+            }
+          }
+          return '#222';
+        })
+        .on("mouseover", function(d) {
+          d3.select(this)
+            .style("fill", function(){
+              currCol = $(this).attr('style');
+              currCol = currCol.match(/fill: ([^;]*);/)[1];
+              return "#fafafa";
+            });
+          d3.select("#countryId")
+            .select("#cName")
+            .text(function(){
+              var tmp = countryhashMap[d.id];
+              if(tmp != undefined){
+                return tmp['StateName'];
+              }
+              return '';
+            });
+          d3.select("#countryId")
+            .select("#iME")
+            .text(function(){
+              var tmp = countryhashMap[d.id];
+              if(tmp != undefined){
+                var tmp2 = nmchash[tmp['cowCode']]['milex'];
+                if(tmp2 < 0){
+                  return ''
+                }
+                return nmchash[tmp['cowCode']]['milex'];
+              }
+              return '';
+            });
+        })
+        .on("mouseout", function(d) {
+          d3.select(this)
+            .style("fill", function(){
+              return currCol;
+            });
+        })
+        .on("click", function(d) {
+          if(clicked == 0 || clicked != d.id){
+            clicked = d.id;
+            allblack();
+            d3.select(this)
+              .style({
+                stroke: '#fff',
+                'stroke-width': '3px'
+              });
+          } else {
+            clicked = 0;
+            d3.select(this)
+              .style('stroke-width', '0px');
+          }
+          var tmp = countryhashMap[d.id];
+          if(tmp != undefined){
+            countryFilter = tmp['cowCode'];
+            addBoxes();
+          } else {
+            countryFilter = 0;
+          }
+        });
+
       addBoxes();
   });          
+  });
+  });
   });
   });
   });
@@ -493,7 +538,18 @@ function accordChange(){
 
 function accordClose(){
   g.selectAll("path")
-    .style("fill", "#222");
+    .style("fill", function(d){
+      var tmpID = countryhashMap[d.id];
+      if(tmpID != undefined){
+        var tmpMP = mphash[Number(tmpID['cowCode'])];
+        if(tmpMP != undefined &&
+          (tmpMP['StDateP'] < rounded[1] || 
+          tmpMP['EndDateP'] > rounded[0])){
+          return t.url();
+        }
+      }
+      return '#222';
+    })
 }
 
 $( document ).ready(function() {
@@ -505,23 +561,6 @@ $( document ).ready(function() {
   warheight();
 
   window.onresize = warheight;
-  // $('#valChanges').submit(function (e){
-  //   neutr = $('.Nneutr').val();
-  //   green = $('.Ngreen').val();
-  //   domVal = [0, Number(neutr), Number(green)];
-  //   colorFn = d3.scale.linear().domain(domVal).range(["#C14448","grey","#89D071"]);
-  //   recolor();
-
-  //   newRad = $('.Nrad').val();
-
-  //   g.selectAll(".circ")
-  //     .attr("r", function(d) {
-  //       return hash[d.id]["PopulationAccessPerCenter"] / Number(25000 - newRad);
-  //     })
-
-  //   e.preventDefault();
-  //   return false;
-  // });
 });
 
 
