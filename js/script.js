@@ -151,15 +151,15 @@ function addBoxes(){
     .attr("r", function(d){
       if(d['StDateP'] != undefined && 
         d['StDateP'].getTime() > rounded[0] 
-        && d['StDateP'].getTime() < rounded[1]
-        && (clicked == 0 || countryhashMap[clicked]['cowCode'] == d['ccode'])){
-        if(d['Outcome'] == 1 || d['Outcome'] == 2){
-          if (clicked ==0){
-            return 1;
-          }
+        && d['StDateP'].getTime() < rounded[1]){
+        
+        if (countryhashMap[clicked]['cowCode'] == d['ccode']){
           return 3;
         }
-        return 0.5;
+        if(d['Outcome'] == 1 || d['Outcome'] == 2){
+            return 1;
+        }
+        
       }
       return 0.5;
     });

@@ -128,8 +128,8 @@ line {
 }
 #lKey{
   position: absolute;
-  left: 730px;
-  top:450px;
+  left: 650px;
+  top:100px;
 }
 
 
@@ -154,6 +154,13 @@ line {
 .label1{
   font-size: 0.5em;
   font-weight: 100;
+}
+
+#splotTitle{
+  position: absolute;
+  top:622px;
+  left:165px;
+  font-weight: 200;
 }
 
 
