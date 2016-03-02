@@ -18,6 +18,8 @@ var g = svg.append("g")
     .attr("id", "mapSVG");
 var navg = svg.append('g')
     .attr('id', 'timeline');
+var lineg = svg.append('g')
+    .attr('id', 'lineg');
 
 var colorVarType = "HIVstage3Rates_",
     colorVarYear = "08",
@@ -25,12 +27,14 @@ var colorVarType = "HIVstage3Rates_",
 
 var countryhashMap = new Object();
 var countryhashCOW = new Object();
-var nmchash = new Object();
+var nmchash = [];
 var mphash = new Object();
 var warhash = new Object();
 var codehash = [];
+var nmchashkey = new Object();
 
 var warOpen;
+var lineVar = 'milex'; 
 
 var neutr = 8,
     green = 16,
@@ -76,6 +80,11 @@ function types2(d) {
     zeropad(d.stday)+'/'+d.styear);
   d.EndDateP = dateFormat(zeropad(d.endmonth)+'/'+
     zeropad(d.endday)+'/'+d.endyear);
+  return d;
+}
+function types3(d) {
+  d.date = dateFormat(zeropad('01')+'/'+
+    zeropad('01')+'/'+d.year);
   return d;
 }
 
@@ -152,7 +161,7 @@ function addBoxes(){
       if(d['StDateP'] != undefined && 
         d['StDateP'].getTime() > rounded[0] 
         && d['StDateP'].getTime() < rounded[1]){
-        
+
         if (countryhashMap[clicked]['cowCode'] == d['ccode']){
           return 3;
         }
@@ -202,6 +211,80 @@ function allblack(){
 }
 
 
+      // Draw line
+      function lineplot(lc2, lv){
+        console.log(lc2, lv);
+        var lc = nmchashkey[lc2];
+        lineg.selectAll('.lines').remove();
+        lineg.selectAll('g').remove();
+        // X
+        var navXline = d3.time.scale()
+          .domain(dateRange)
+          .range([0, navWidth-30]);
+
+
+        // Y
+        var domYline = d3.extent(nmchash[lc].map(function(d) {
+          return Number(d[lv]);
+        }));
+        domYline[0] = 0;
+        domYline[1] = Number(domYline[1]);
+
+        var navYline = d3.scale.linear()
+          .domain(domYline)
+          .range([navHeight-1, 0]);
+
+        var line = d3.svg.line()
+          .x(function(d) { 
+            return navXline(d['date']); 
+          })
+          .y(function(d) { 
+            return navYline(d[lv]) || 0; 
+          });
+
+        lineg
+          .append("path")
+          .attr("transform", "translate(180," + (height - (2 * navHeight)- 50) + ")")
+          .attr('class', 'linegraph')
+          .attr('class', 'lines')
+          .attr("d", line(nmchash[lc]));
+
+        // Y axis
+        var tickctr=0;
+        var yAxisline = d3.svg.axis()
+          .scale(navYline)
+          .orient("left")
+          .ticks(5, "s");
+
+        lineg.append('g')
+          .attr('id', 'yAxis')
+          .attr("transform", "translate(160," + (height - (2 * navHeight)- 50) + ")")
+          .call(yAxisline);
+
+        lineg.append('g')
+          .attr("id", "scatterlabel")
+          .attr("transform", "translate(120," + (height- (2 * navHeight) - 10) + ")")
+          .append('text')
+          .attr("class", "label2")
+          .style("text-anchor", "middle")
+          .attr("transform", "rotate(-90)")
+          .text(codehash[lv]);
+        }
+
+
+
+
+
+        function nmcSelect(){
+          lineVar = $("#cVar").val();
+          if(clicked){
+            var tmp = countryhashMap[clicked];
+            if(tmp != undefined){
+              countryFilter = tmp['cowCode'];
+              lineplot(countryFilter, lineVar);
+            }
+          }
+        }
 // Create the map
 function drawMap(){
   // Load data
@@ -210,7 +293,7 @@ function drawMap(){
   d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
   d3.csv("../data/COW/Inter-StateWarData_v4.0.csv", types, function(error4, cow) {
   d3.csv("../data/SystemMembership_MajorPower/majors2011.csv", types2, function(error5, mp) {
-  d3.csv("../data/NationalMaterialCapabilities/NMC_v4_0.csv", function(error6, nmc) {
+  d3.csv("../data/NationalMaterialCapabilities/NMC_v4_0.csv", types3, function(error6, nmc) {
       if (error) return console.log(error);
       if (error2) return console.log(error2);
       if (error3) return console.log(error3);
@@ -247,6 +330,13 @@ function drawMap(){
         codehash['Outcome'][6] = "Stalemate";
         codehash['Outcome'][7] = "Continuing low-level conflict";
         codehash['Outcome'][8] = "Changed sides";
+
+        codehash['irst'] = "Iron + steel production";
+        codehash['milex'] = "Military Expenditures";
+        codehash['milper'] = "Military Personnel";
+        codehash['pec'] = "Energy Consumption";
+        codehash['tpop'] = "Total Population";
+        codehash['upop'] = "Urban Population";
       }
       buildCodes();
 
@@ -260,13 +350,17 @@ function drawMap(){
           mphash[d.ccode] = d;
       });
 
-      var tmpCTRY = '';
+      var tmpCTRY = '', tmpi=-1, tmpj=0;
       nmc.forEach(function(d, i) {
           if(tmpCTRY != d.ccode){
             tmpCTRY = d.ccode;
-            nmchash[d.ccode] = new Object();
+            tmpi++;
+            tmpj=0;
+            nmchashkey[d.ccode] = tmpi;
+            nmchash[tmpi] = [];
           }
-          nmchash[d.ccode][d.year] = d;
+          nmchash[tmpi][tmpj] = d;
+          tmpj++;
       });
 
       cow.forEach(function(d, i){
@@ -420,18 +514,17 @@ function drawMap(){
 
       navg.append('g')
         .attr("id", "scatterlabel")
-        .attr("transform", "translate(120," + (height- 55) + ")")
+        .attr("transform", "translate(120," + (height - navHeight - 5) + ")")
         .append('text')
         .attr("class", "label2")
-        .style("text-anchor", "center")
+        .style("text-anchor", "middle")
         .attr("transform", "rotate(-90)")
         .text("Fatalities by country");
       navg.select('#scatterlabel')
         .append('text')
         .attr("class", "label1")
-        .style("text-anchor", "center")
+        .style("text-anchor", "middle")
         .attr("transform", "rotate(-90)")
-        .attr("dx", "3em")
         .attr("dy", "1.5em")
         .text("log scale");
 
@@ -456,12 +549,49 @@ function drawMap(){
         .attr("r", 0.5);
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       // Draw map
       g.selectAll("path")
         .data(topojson.feature(geodata,geodata.objects.countries).features) 
         .enter()
         .append("path")
-        .attr("transform", "translate(0," + -60 + ")")
+        .attr("transform", "translate(0," + -100 + ")")
         .attr("class", "countries")
         .attr("d",path)
         .attr("id", function(d) {
@@ -516,6 +646,35 @@ function drawMap(){
             });
         })
         .on("click", function(d) {
+          var tmp = countryhashMap[d.id];
+          if(tmp != undefined){
+            countryFilter = tmp['cowCode'];
+            addBoxes();
+            lineplot(countryFilter, lineVar);
+
+
+            // d3.select("#splotTitleLine")
+            //   .select("#cVar")
+            //   .text(function(){
+            //     return codehash[linevar] || '';
+            //   });
+            d3.select("#splotTitleLine")
+              .select("#cName")
+              .text(function(){
+                if(countryhashCOW[countryFilter]){
+                  $('.sLine').removeClass('hidden');
+                  return countryhashCOW[countryFilter]['StateName'];
+                } else {
+                  $('.sLine').addClass('hidden');
+                  lineg.selectAll('.lines').remove();
+                  lineg.selectAll('g').remove();
+                  return '';
+                }
+              });
+          } else {
+            countryFilter = 0;
+          }
+
           if(clicked == 0 || clicked != d.id){
             clicked = d.id;
             allblack();
@@ -526,16 +685,14 @@ function drawMap(){
               });
           } else {
             clicked = 0;
+            $('.sLine').addClass('hidden');
+            lineg.selectAll('.lines').remove();
+            lineg.selectAll('g').remove();
             d3.select(this)
               .style('stroke-width', '0px');
           }
-          var tmp = countryhashMap[d.id];
-          if(tmp != undefined){
-            countryFilter = tmp['cowCode'];
-            addBoxes();
-          } else {
-            countryFilter = 0;
-          }
+          
+
         });
 
       addBoxes();

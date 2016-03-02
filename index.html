@@ -17,10 +17,11 @@
   </head>
 
 <body>
-  <center>
+  <center class="header">
     <h1>Wars</h1>
     <span class="small">Correlates of war.</span>
   </center>
+  <br>
   <script src="js/script.js"></script>
 
   <!-- <div id="lTime" class="label">
@@ -56,7 +57,18 @@
     </span> -->
   </div>
 
-  <div id="splotTitle" class="small">
+  <div id="splotTitleLine" class="hidden sLine">
+    <select id="cVar" onchange="nmcSelect()">
+      <option value='milex' selected>Military Expenditures</option>
+      <option value='milper'>Military Personnel</option>
+      <option value='pec'>Energy Consumption</option>
+      <option value='irst'>Iron + steel production</option>
+      <option value='tpop'>Total Population</option>
+      <option value='upop'>Urban Population</option>
+    </select>
+     in <span id="cName"></span>
+  </div>
+  <div id="splotTitleDot" class="sDot">
     Fatalities by country (log scale)
   </div>
 

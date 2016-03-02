@@ -5,10 +5,6 @@ html, body{
   width: 100%;
 }
 
-h1{
-  line-height: .5;
-}
-
 .countries{
   fill: rgba(0, 0, 0, 1);
   stroke: #777;
@@ -38,11 +34,8 @@ line {
   font-family: 'Roboto Slab', serif;
   font-weight: 200;
   text-transform: capitalize;
-}
-
-#countryId{
-  top:130px;
-  left:50px;
+  top:100px;
+  left:20px;
   font-size: 0.8em;
 }
 #warBox{
@@ -129,7 +122,12 @@ line {
 #lKey{
   position: absolute;
   left: 650px;
-  top:100px;
+  top:50px;
+}
+.header{
+  width: calc(100% - 250px);
+  line-height: 0;
+  margin-top: 10px;
 }
 
 
@@ -156,11 +154,20 @@ line {
   font-weight: 100;
 }
 
-#splotTitle{
+.sLine, .sDot{
   position: absolute;
-  top:622px;
-  left:165px;
-  font-weight: 200;
+  left:15px;
+  font-weight: 400;
+  font-size: .7em;
+  width:80px;
+  overflow: auto;
+  line-height: 1;
+}
+.sLine{
+  top:590px;
+}
+.sDot{
+  top:670px;
 }
 
 
@@ -191,7 +198,11 @@ line {
 }
 
 
-
+.lines{
+    stroke: #7ECF6E;
+    stroke-width: 2;
+    fill: none;
+}
 
 
 
