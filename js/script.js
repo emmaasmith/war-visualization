@@ -94,6 +94,39 @@ function zeropad(x){
   return zeros.substring(0, (zeros.length - val.length)) + val;
 }
 
+function recolorCirc(){
+  navg.selectAll(".tlcirc")
+    .style("fill", function(d){
+      if(d['StDateP'] != undefined && 
+        d['StDateP'].getTime() > rounded[0] 
+        && d['StDateP'].getTime() < rounded[1]
+        && (clicked == 0 || countryhashMap[clicked]['cowCode'] == d['ccode'])){
+        if(d['Outcome'] == 1){
+          return '#3C9EB4';
+        } else if(d['Outcome'] == 2){
+          return '#AC394B';
+        }
+        return "#111";
+      } else {
+        return "#aaa";
+      }
+    })
+    .attr("r", function(d){
+      if(d['StDateP'] != undefined && 
+        d['StDateP'].getTime() > rounded[0] 
+        && d['StDateP'].getTime() < rounded[1]){
+
+        if (countryhashMap[clicked]['cowCode'] == d['ccode']){
+          return 3;
+        }
+        if(d['Outcome'] == 1 || d['Outcome'] == 2){
+            return 1;
+        }
+      }
+      return 0.5;
+    });
+}
+
 function addBoxes(){
   var tmpHTML = '', itemHTML = '', allHTML = '',
       hasCtry = 0;
@@ -143,37 +176,7 @@ function addBoxes(){
     .html(allHTML);
   $('.ui.accordion').accordion('refresh');
 
-  navg.selectAll(".tlcirc")
-    .style("fill", function(d){
-      if(d['StDateP'] != undefined && 
-        d['StDateP'].getTime() > rounded[0] 
-        && d['StDateP'].getTime() < rounded[1]
-        && (clicked == 0 || countryhashMap[clicked]['cowCode'] == d['ccode'])){
-        if(d['Outcome'] == 1){
-          return '#3C9EB4';
-        } else if(d['Outcome'] == 2){
-          return '#AC394B';
-        }
-        return "#111";
-      } else {
-        return "#aaa";
-      }
-    })
-    .attr("r", function(d){
-      if(d['StDateP'] != undefined && 
-        d['StDateP'].getTime() > rounded[0] 
-        && d['StDateP'].getTime() < rounded[1]){
-
-        if (countryhashMap[clicked]['cowCode'] == d['ccode']){
-          return 3;
-        }
-        if(d['Outcome'] == 1 || d['Outcome'] == 2){
-            return 1;
-        }
-        
-      }
-      return 0.5;
-    });
+  recolorCirc();
 }
 
 function recolor(warData){
@@ -626,13 +629,12 @@ function drawMap(){
               });
           } else {
             countryFilter = 0;
+            clicked = 0;
             $('.sLine').addClass('hidden');
-                  lineg.selectAll('.lines').remove();
-                  lineg.selectAll('g').remove();
+            lineg.selectAll('.lines').remove();
+            lineg.selectAll('g').remove();
+            recolorCirc();
           }
-
-
-          
 
         });
 
