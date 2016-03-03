@@ -4,31 +4,25 @@ html, body{
   font-size: 100%;
   width: 100%;
 }
-
 .countries{
   fill: rgba(0, 0, 0, 1);
   stroke: #777;
   stroke-width: 0.5px;
 }
-
 path {
   fill: rgba(0, 0, 0, 0);
 }
-
 line {
   stroke: #555;
   stroke-width: 2px;
 }
-
 .hidden {
   display: none;
 }
-
 #mapSVG{
   position:relative;
   top:0px;
 }
-
 .svgcontainer{
   padding-left: 40px;
 }
@@ -76,27 +70,16 @@ line {
   width:150px;
   color:rgba(0, 0, 0, 1);
 }
-#lTime{
-  top:610px;
-  left:165px;
-}
-
 #lEdit{
   top:735px;
   left:165px;
 }
-
-#lMenu{
-  top:590px;
-  left:525px;
-  font-size: 0.7em;
-  text-align: right;
-}
-
-.small{
+.small, .subheader{
   font-size: .7em;
 }
-
+.subheader{
+    line-height: 1;
+}
 .inp{
   width:55px;
 }
@@ -124,23 +107,20 @@ line {
 }
 #lKey{
   position: absolute;
-  left: 650px;
-  top:50px;
+  left: 700px;
+  top:97px;
 }
 .header{
   width: calc(100% - 250px);
   line-height: 0;
   margin-top: 10px;
 }
-
-
-/*Bottom*/
+/* Bottom */
 #xAxis path, #xAxis line, #yAxis path, #yAxis line {
   stroke: #ccc;
   fill: none;
   shape-rendering: crispEdges;
 }
-
 #xAxis{
   font-size: 0.5em;
 }
@@ -156,7 +136,6 @@ line {
   font-size: 0.5em;
   font-weight: 100;
 }
-
 .sLine, .sDot{
   position: absolute;
   left:15px;
@@ -170,50 +149,32 @@ line {
   margin-left: -5px;
 }
 .sLine{
-  top:590px;
+  top:640px;
 }
 .sDot{
-  top:670px;
+  top:730px;
 }
-
-
 .brushBG {
   fill: #ddd;
 }
-
 .brushGrid line,
 .brushGrid path {
   fill: none;
   stroke: #fff;
   shape-rendering: crispEdges;
 }
-
 .brushGrid .minor line {
   stroke-opacity: .5;
   stroke-width: 1px;
 }
-
-
-
-
 .brush .extent {
   stroke: #44BAC1;
   fill: #44BAC1;
   fill-opacity: .365;
   shape-rendering:crispEdges;
 }
-
-
 .lines{
     stroke: #7ECF6E;
     stroke-width: 2;
     fill: none;
 }
-
-
-
-
-
-
-
-

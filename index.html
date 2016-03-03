@@ -5,60 +5,31 @@
   <head>
     <meta charset="utf-8">
       <title>Wars: Data Viz</title>
-      <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+      <script src="/js/jquery.min.js"></script>
       <link rel="stylesheet" href="/css/style.css">
       <link rel="stylesheet" href="/css/semantic.css">
       <link href='https://fonts.googleapis.com/css?family=Roboto+Slab:400,300,300italic' rel='stylesheet' type='text/css'>
 
-      <script src="http://d3js.org/d3.v3.min.js"></script>
-      <script src="http://d3js.org/topojson.v1.min.js"></script>
+      <script src="/js/d3.v3.min.js"></script>
+      <script src="/js/topojson.v1.min.js"></script>
       <script src="/js/textures.js"></script>
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="/css/font-awesome.min">
   </head>
-
 <body>
   <center class="header">
-    <h1>Wars</h1>
-    <span class="small">Correlates of war.</span>
+    <h1>Inter-State Wars</h1>
+    <div class="subheader">
+      Correlates of war throughout documented history.
+      <br>Filter by country, conflict, and/or time.
+    </div>
   </center>
   <br>
   <div class="svgcontainer">
     <script src="js/script.js"></script>
   </div>
-
-  <!-- <div id="lTime" class="label">
-    Timeline
-  </div>
-
-  <div id="lMenu" class="label">
-    <input type="checkbox" id="checkB" onchange="changeCheck(this)" checked> Show population per testing center circles<br>
-
-    <select id="varMenu" onchange="changeVar()">
-      <option value='HIVstage3Rates' selected>HIV Stage 3</option>
-      <option value='HIVstage3deathsRates' selected>HIV Stage 3 Deaths</option>
-      <option value='PersonslivingwithHIVstage3Rates_08' selected>Persons living with HIV Stage 3</option>
-      <option value='HIVdiagnosesRates' selected>HIV Diagnoses</option>
-      <option value='HIVdeathsRates' selected>HIV Deaths</option>
-      <option value='PersonslivingwithdiagnosedHIVRates' selected>Persons living with diagnosed HIV</option>
-    </select>
-  </div> -->
-
-
   <div id="countryId">
     <span id="cName"></span>
-    <!-- <hr>
-    <span class="small">
-      Military
-      <br><b><span id="iME">0</span></b>
-
-      <br><br>Population
-      <br><b><span id="iTP">0</span></b><br><br>
-
-      <hr style="border:0; border-bottom:1px dashed #ccc; background:rgba(0,0,0,0)">
-      <br><span id="iEC"></span>
-    </span> -->
   </div>
-
   <div id="splotTitleLine" class="hidden sLine">
     <select id="cVar" onchange="nmcSelect()">
       <option value='milex' selected>Military Expenditures</option>
@@ -73,19 +44,13 @@
   <div id="splotTitleDot" class="sDot">
     Fatalities by country (log scale)
   </div>
-
-    <div id="warBox" class="small">
-    </div>
-
-  <div id="lEdit" class="label">
-    </div>
-
+  <div id="warBox" class="small">
+  </div>
   <div id="lKey" class="small">
-      <span id="stripe"><b>Stripe</b></span> = major power sometime in interval
-      <br> <span id="blue"><b>Blue</b></span> = victor in selected war
-      <br> <span id="red"><b>Red</b></span> = defeated in selected war
+      = major power in time interval
+      <br>= victor in selected war
+      <br>= defeated in selected war
     </div> 
-
 </body>
 <script src="/js/accordion.js"></script>
 </html>

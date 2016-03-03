@@ -1,7 +1,7 @@
 var colorVar, xVar, yVar, colDom, xDom, yDom;
 
 var width = 800,
-    height = 700;
+    height = 730;
 
 var projection = d3.geo.mercator()
     .scale(120)
@@ -11,7 +11,8 @@ var projection = d3.geo.mercator()
 var path = d3.geo.path()
     .projection(projection);
 
-var svg = d3.select(".svgcontainer").append("svg")
+var svg = d3.select(".svgcontainer")
+    .append("svg")
     .attr("width", width)
     .attr("height", height);
 var g = svg.append("g")
@@ -21,9 +22,11 @@ var navg = svg.append('g')
 var lineg = svg.append('g')
     .attr('id', 'lineg');
 
-var colorVarType = "HIVstage3Rates_",
-    colorVarYear = "08",
-    colorVariable = colorVarType + colorVarYear;
+// Set up textures
+var t = textures.lines()
+  .thicker(10)
+  .thinner(4);
+svg.call(t);
 
 var countryhashMap = new Object();
 var countryhashCOW = new Object();
@@ -36,14 +39,6 @@ var nmchashkey = new Object();
 var warOpen;
 var lineVar = 'milex'; 
 
-var neutr = 8,
-    green = 16,
-    domVal = [0, neutr, green];
-var colorFn = d3.scale.linear().domain(domVal).range(["#C14448","grey","#89D071"]);
-var yi = "08", 
-    yf = "09";
-
-var newRad = 20000;
 var currCol = '', clicked = 0;
 var countryFilter = 0;
 
@@ -52,16 +47,9 @@ var navX, navY;
 
 var rounded;
 var navHeight, navWidth;
-var t;
 
 var tmpSt, tmpEnd, dateRange;
 var dateFormat = d3.time.format("%x").parse;
-
-// Set up textures
-t = textures.lines()
-  .thicker(10)
-  .thinner(4);
-svg.call(t);
 
 function types(d) {
   d.StDateP = dateFormat(zeropad(d.StartMonth1)+'/'+
@@ -130,7 +118,6 @@ function recolorCirc(){
 function addBoxes(){
   var tmpHTML = '', itemHTML = '', allHTML = '',
       hasCtry = 0;
-
   for (d in warhash) {
     hasCtry = 0;
     tmpHTML = '<div id="' + warhash[d]['name'] +
@@ -146,10 +133,8 @@ function addBoxes(){
         '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + 
         warhash[d]['name'] + '</div><div class="content">';
     }
-
     if (warhash[d]['min'] > rounded[0].getTime() && 
       warhash[d]['max'] < rounded[1].getTime()){
-
       for(e in warhash[d]){
         if(warhash[d][e]['txt'] != undefined){
           if(countryFilter==0 || (countryFilter!=0 && warhash[d][e]['ccode'] == countryFilter)){
@@ -158,7 +143,6 @@ function addBoxes(){
           tmpHTML += warhash[d][e]['txt'];
         }
       };
-
       tmpHTML += '</div></div>';
       itemHTML += tmpHTML;
       tmpHTML = '';
@@ -166,16 +150,12 @@ function addBoxes(){
     if(hasCtry == 1){
       allHTML += itemHTML;
     }
-    
     itemHTML = '';
-
   };
   recolor(warhash);
-
   d3.select("#warBox")
     .html(allHTML);
   $('.ui.accordion').accordion('refresh');
-
   recolorCirc();
 }
 
@@ -206,14 +186,13 @@ function recolor(warData){
         }
       }
       return '#222';
-    })
+    });
 }
 
 function allblack(){
   g.selectAll("path")
     .style("stroke-width", '0px');
 }
-
 
 // Draw line
 function lineplot(lc2, lv){
@@ -230,11 +209,9 @@ function lineplot(lc2, lv){
   }));
   domYline[0] = 0;
   domYline[1] = Number(domYline[1]);
-
   var navYline = d3.scale.linear()
     .domain(domYline)
     .range([navHeight-1, 0]);
-
   var line = d3.svg.line()
     .x(function(d) { 
       return navXline(d['date']); 
@@ -242,7 +219,6 @@ function lineplot(lc2, lv){
     .y(function(d) { 
       return navYline(d[lv]) || 0; 
     });
-
   lineg
     .append("path")
     .attr("transform", "translate(180," + (height - (2 * navHeight)- 50) + ")")
@@ -256,12 +232,10 @@ function lineplot(lc2, lv){
     .scale(navYline)
     .orient("left")
     .ticks(5, "s");
-
   lineg.append('g')
     .attr('id', 'yAxis')
     .attr("transform", "translate(160," + (height - (2 * navHeight)- 50) + ")")
     .call(yAxisline);
-
   lineg.append('g')
     .attr("id", "scatterlabel")
     .attr("transform", "translate(120," + (height- (2 * navHeight) - 10) + ")")
@@ -282,18 +256,48 @@ function nmcSelect(){
     }
   }
 }
+
+function setupKeys(){
+  var keySquare1 = svg
+    .append('rect')
+    .attr('x', 640)
+    .attr('y', 0)
+    .attr("width", 15)
+    .attr("height", 15)
+    .style("fill", function(d) {
+      return t.url();
+    });
+  var keySquare2 = svg
+    .append('rect')
+    .attr('x', 640)
+    .attr('y', 20)
+    .attr("width", 15)
+    .attr("height", 15)
+    .style("fill", function(d) {
+      return '#3C9EB4';
+    });
+  var keySquare3 = svg
+    .append('rect')
+    .attr('x', 640)
+    .attr('y', 40)
+    .attr("width", 15)
+    .attr("height", 15)
+    .style("fill", function(d) {
+      return '#AC394B';
+    });
+}
+setupKeys();
+
 // Create the map
 function drawMap(){
   // Load data
   d3.json("../data/maps/final/world.json",function(error,geodata) {
   d3.csv("../data/other/CCFin.csv",function(error2,cCode) {
-  d3.csv("../data/maps/final/MID.csv", types, function(error3, mid) {
   d3.csv("../data/COW/Inter-StateWarData_v4.0.csv", types, function(error4, cow) {
   d3.csv("../data/SystemMembership_MajorPower/majors2011.csv", types2, function(error5, mp) {
   d3.csv("../data/NationalMaterialCapabilities/NMC_v4_0.csv", types3, function(error6, nmc) {
       if (error) return console.log(error);
       if (error2) return console.log(error2);
-      if (error3) return console.log(error3);
       if (error4) return console.log(error4);
       if (error5) return console.log(error5);
       if (error6) return console.log(error6);
@@ -302,7 +306,6 @@ function drawMap(){
       function buildCodes(){
         codehash['Region'] = new Object();
         codehash['Outcome'] = new Object();
-
         codehash['Region'][1] = "W. Hemisphere";
         codehash['Region'][2] = "Europe";
         codehash['Region'][4] = "Africa";
@@ -318,7 +321,6 @@ function drawMap(){
         codehash['Region'][17] = "Asia & Oceania";
         codehash['Region'][18] = "Africa & Middle East";
         codehash['Region'][19] = "Europe, Africa, Middle East, Asia & Oceania";
-        
         codehash['Outcome'][1] = "Victor";
         codehash['Outcome'][2] = "Loser";
         codehash['Outcome'][3] = "Compromise/Tied";
@@ -327,7 +329,6 @@ function drawMap(){
         codehash['Outcome'][6] = "Stalemate";
         codehash['Outcome'][7] = "Continuing low-level conflict";
         codehash['Outcome'][8] = "Changed sides";
-
         codehash['irst'] = "Iron + steel production";
         codehash['milex'] = "Military Expenditures";
         codehash['milper'] = "Military Personnel";
@@ -342,11 +343,9 @@ function drawMap(){
           countryhashCOW[d.cowCode] = d;
           countryhashMap[d.CId] = d;
       });
-
       mp.forEach(function(d, i) {
           mphash[d.ccode] = d;
       });
-
       var tmpCTRY = '', tmpi=-1, tmpj=0;
       nmc.forEach(function(d, i) {
           if(tmpCTRY != d.ccode){
@@ -378,7 +377,6 @@ function drawMap(){
         tmpTxt += codehash['Outcome'][tmpOut]+'</div><br>';
         tmpTxt += '<div class="warT">Fatalities:</div><div class="warV">'+
           d.BatDeath+'</div><br></div>';
-
         d['txt'] = tmpTxt;
 
         // If first time encountering a war
@@ -402,78 +400,69 @@ function drawMap(){
       function buildBrush(){
         navWidth = width * 3/4;
         navHeight = 80;
-
         dateRange = cow.map(function(d) { return d.StDateP });
         dateRange = dateRange.concat(cow.map(function(d) { return d.EndDateP }));
         dateRange = d3.extent(dateRange);
-
         navX = d3.time.scale()
           .domain(dateRange)
           .range([0, navWidth-1]);
-
         var xAxis = d3.svg.axis()
           .scale(navX)
           .orient("bottom")
           .ticks(7);
 
-        // Brush fn
-        function brushfn() {
-          if (!d3.event.sourceEvent) return;
-
-          var selected = brush.extent();
-          rounded = selected.map(d3.time.year.round);
-
-          if (!(rounded[0] < rounded[1])) {
-            rounded[0] = d3.time.year.floor(selected[0]);
-            rounded[1] = d3.time.year.ceil(selected[1]);
-          }
-
-          d3.select(this).transition()
-              .call(brush.extent(rounded))
-              .call(brush.event);
-
-          var yearString = d3.time.format("%y");
-          yi = yearString(rounded[0]);
-          yf = yearString(rounded[1]);
-
-          addBoxes();
-        }   
-        
-        // Bottom nav
-        rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
-        var brush = d3.svg.brush()
-          .x(navX)
-          .extent(rounded)
-          .on("brushend", brushfn);
-
-        navg.append("g")
-          .attr("class", "brushGrid")
-          .attr("transform", "translate(160," + (height - 50) + ")")
-          .call(d3.svg.axis()
-              .scale(navX)
-              .orient("bottom")
-              .ticks(d3.time.month, 1)
-              .tickSize(-navHeight)
-              .tickFormat(""))
-          .selectAll(".tick")
-        .classed("minor", function(d) { 
-          return d.getMonth(); 
-        });    
+      // Brush fn
+      function brushfn() {
+        if (!d3.event.sourceEvent) return;
+        var selected = brush.extent();
+        rounded = selected.map(d3.time.year.round);
+        if (!(rounded[0] < rounded[1])) {
+          rounded[0] = d3.time.year.floor(selected[0]);
+          rounded[1] = d3.time.year.ceil(selected[1]);
+        }
+        d3.select(this).transition()
+            .call(brush.extent(rounded))
+            .call(brush.event);
+        var yearString = d3.time.format("%y");
+        yi = yearString(rounded[0]);
+        yf = yearString(rounded[1]);
+        addBoxes();
+      }   
+      
+      // Bottom nav
+      rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
+      var brush = d3.svg.brush()
+        .x(navX)
+        .extent(rounded)
+        .on("brushend", brushfn);
+      navg.append("g")
+        .attr("class", "brushGrid")
+        .attr("transform", "translate(160," + (height - 50) + ")")
+        .call(d3.svg.axis()
+            .scale(navX)
+            .orient("bottom")
+            .ticks(d3.time.month, 1)
+            .tickSize(-navHeight)
+            .tickFormat(""))
+        .selectAll(".tick")
+      .classed("minor", function(d) { 
+        return d.getMonth(); 
+      });    
 
       // Set up brush
-       var gBrush = navg.append("g")
-          .attr('class', 'brush')
-          .attr("transform", "translate(160," + (height - navHeight - 50) + ")")
-          .call(brush);
+      var gBrush = navg.append("g")
+        .attr('class', 'brush')
+        .attr("transform", "translate(160," + (height - navHeight - 50) + ")")
+        .call(brush);
 
-        gBrush.selectAll('rect')
-          .attr('height', navHeight);
+      gBrush.selectAll('rect')
+        .attr('height', navHeight);
 
-        d3.select('svg')
-          .append('g')
-          .attr('id', 'xAxis')
-          .attr("transform", "translate(160," + (height - 50) + ")")
-          .call(xAxis);
+      d3.select('svg')
+        .append('g')
+        .attr('id', 'xAxis')
+        .attr("transform", "translate(160," + (height - 50) + ")")
+        .call(xAxis);
       }
       buildBrush();
 
@@ -483,11 +472,9 @@ function drawMap(){
       }));
       domY[0] = 1;
       domY[1] = Number(domY[1]);
-
       navY = d3.scale.log().base(Math.E)
         .domain(domY)
         .range([navHeight-1, 0]);
-
       var tickctr=0;
       var yAxis = d3.svg.axis()
         .scale(navY)
@@ -501,13 +488,11 @@ function drawMap(){
             return ''
           }
         });
-
       d3.select('svg')
         .append('g')
         .attr('id', 'yAxis')
         .attr("transform", "translate(160," + (height - navHeight- 50) + ")")
         .call(yAxis);
-
       navg.append('g')
         .attr("id", "scatterlabel")
         .attr("transform", "translate(120," + (height - navHeight - 5) + ")")
@@ -523,7 +508,6 @@ function drawMap(){
         .attr("transform", "rotate(-90)")
         .attr("dy", "1.5em")
         .text("log scale");
-
       navg.append('g')
         .selectAll(".tlcirc")
         .data(cow)
@@ -549,7 +533,7 @@ function drawMap(){
         .data(topojson.feature(geodata,geodata.objects.countries).features) 
         .enter()
         .append("path")
-        .attr("transform", "translate(0," + -100 + ")")
+        .attr("transform", "translate(0," + -85 + ")")
         .attr("class", "countries")
         .attr("d",path)
         .attr("id", function(d) {
@@ -609,7 +593,6 @@ function drawMap(){
             d3.select(this)
               .style('stroke-width', '0px');
           }
-
           if(tmp != undefined){
             countryFilter = tmp['cowCode'];
             addBoxes();
@@ -635,12 +618,9 @@ function drawMap(){
             lineg.selectAll('g').remove();
             recolorCirc();
           }
-
         });
-
       addBoxes();
   });          
-  });
   });
   });
   });
@@ -668,7 +648,7 @@ function accordClose(){
         }
       }
       return '#222';
-    })
+    });
 }
 
 $( document ).ready(function() {
@@ -678,11 +658,5 @@ $( document ).ready(function() {
     $('#warBox').css('height', window.innerHeight);
   }
   warheight();
-
   window.onresize = warheight;
 });
-
-
-
-
-
