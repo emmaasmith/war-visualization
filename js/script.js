@@ -11,7 +11,7 @@ var projection = d3.geo.mercator()
 var path = d3.geo.path()
     .projection(projection);
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select(".svgcontainer").append("svg")
     .attr("width", width)
     .attr("height", height);
 var g = svg.append("g")
@@ -135,7 +135,9 @@ function addBoxes(){
     }
     
     itemHTML = '';
+
   };
+  recolor(warhash);
 
   d3.select("#warBox")
     .html(allHTML);
@@ -193,10 +195,9 @@ function recolor(warData){
             }
           }
         }
-        
         var tmpMP = mphash[Number(tmpID['cowCode'])];
         if(tmpMP != undefined &&
-          (tmpMP['StDateP'] < rounded[1] || 
+          (tmpMP['StDateP'] < rounded[1] && 
           tmpMP['EndDateP'] > rounded[0])){
           return t.url();
         }
@@ -211,80 +212,73 @@ function allblack(){
 }
 
 
-      // Draw line
-      function lineplot(lc2, lv){
-        console.log(lc2, lv);
-        var lc = nmchashkey[lc2];
-        lineg.selectAll('.lines').remove();
-        lineg.selectAll('g').remove();
-        // X
-        var navXline = d3.time.scale()
-          .domain(dateRange)
-          .range([0, navWidth-30]);
+// Draw line
+function lineplot(lc2, lv){
+  var lc = nmchashkey[lc2];
+  lineg.selectAll('.lines').remove();
+  lineg.selectAll('g').remove();
+  // X
+  var navXline = d3.time.scale()
+    .domain(dateRange)
+    .range([0, navWidth-30]);
+  // Y
+  var domYline = d3.extent(nmchash[lc].map(function(d) {
+    return Number(d[lv]);
+  }));
+  domYline[0] = 0;
+  domYline[1] = Number(domYline[1]);
 
+  var navYline = d3.scale.linear()
+    .domain(domYline)
+    .range([navHeight-1, 0]);
 
-        // Y
-        var domYline = d3.extent(nmchash[lc].map(function(d) {
-          return Number(d[lv]);
-        }));
-        domYline[0] = 0;
-        domYline[1] = Number(domYline[1]);
+  var line = d3.svg.line()
+    .x(function(d) { 
+      return navXline(d['date']); 
+    })
+    .y(function(d) { 
+      return navYline(d[lv]) || 0; 
+    });
 
-        var navYline = d3.scale.linear()
-          .domain(domYline)
-          .range([navHeight-1, 0]);
+  lineg
+    .append("path")
+    .attr("transform", "translate(180," + (height - (2 * navHeight)- 50) + ")")
+    .attr('class', 'linegraph')
+    .attr('class', 'lines')
+    .attr("d", line(nmchash[lc]));
 
-        var line = d3.svg.line()
-          .x(function(d) { 
-            return navXline(d['date']); 
-          })
-          .y(function(d) { 
-            return navYline(d[lv]) || 0; 
-          });
+  // Y axis
+  var tickctr=0;
+  var yAxisline = d3.svg.axis()
+    .scale(navYline)
+    .orient("left")
+    .ticks(5, "s");
 
-        lineg
-          .append("path")
-          .attr("transform", "translate(180," + (height - (2 * navHeight)- 50) + ")")
-          .attr('class', 'linegraph')
-          .attr('class', 'lines')
-          .attr("d", line(nmchash[lc]));
+  lineg.append('g')
+    .attr('id', 'yAxis')
+    .attr("transform", "translate(160," + (height - (2 * navHeight)- 50) + ")")
+    .call(yAxisline);
 
-        // Y axis
-        var tickctr=0;
-        var yAxisline = d3.svg.axis()
-          .scale(navYline)
-          .orient("left")
-          .ticks(5, "s");
+  lineg.append('g')
+    .attr("id", "scatterlabel")
+    .attr("transform", "translate(120," + (height- (2 * navHeight) - 10) + ")")
+    .append('text')
+    .attr("class", "label2")
+    .style("text-anchor", "middle")
+    .attr("transform", "rotate(-90)")
+    .text(codehash[lv]);
+}
 
-        lineg.append('g')
-          .attr('id', 'yAxis')
-          .attr("transform", "translate(160," + (height - (2 * navHeight)- 50) + ")")
-          .call(yAxisline);
-
-        lineg.append('g')
-          .attr("id", "scatterlabel")
-          .attr("transform", "translate(120," + (height- (2 * navHeight) - 10) + ")")
-          .append('text')
-          .attr("class", "label2")
-          .style("text-anchor", "middle")
-          .attr("transform", "rotate(-90)")
-          .text(codehash[lv]);
-        }
-
-
-
-
-
-        function nmcSelect(){
-          lineVar = $("#cVar").val();
-          if(clicked){
-            var tmp = countryhashMap[clicked];
-            if(tmp != undefined){
-              countryFilter = tmp['cowCode'];
-              lineplot(countryFilter, lineVar);
-            }
-          }
-        }
+function nmcSelect(){
+  lineVar = $("#cVar").val();
+  if(clicked){
+    var tmp = countryhashMap[clicked];
+    if(tmp != undefined){
+      countryFilter = tmp['cowCode'];
+      lineplot(countryFilter, lineVar);
+    }
+  }
+}
 // Create the map
 function drawMap(){
   // Load data
@@ -442,7 +436,6 @@ function drawMap(){
           addBoxes();
         }   
         
-
         // Bottom nav
         rounded = [new Date(1900, 11, 31), new Date(1950, 11, 31)];
         var brush = d3.svg.brush()
@@ -548,44 +541,6 @@ function drawMap(){
         })
         .attr("r", 0.5);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       // Draw map
       g.selectAll("path")
         .data(topojson.feature(geodata,geodata.objects.countries).features) 
@@ -602,7 +557,7 @@ function drawMap(){
           if(tmpID != undefined){
             var tmpMP = mphash[Number(tmpID['cowCode'])];
             if(tmpMP != undefined &&
-              (tmpMP['StDateP'] < rounded[1] || 
+              (tmpMP['StDateP'] < rounded[1] && 
               tmpMP['EndDateP'] > rounded[0])){
               return t.url();
             }
@@ -625,19 +580,6 @@ function drawMap(){
               }
               return '';
             });
-          // d3.select("#countryId")
-          //   .select("#iME")
-          //   .text(function(){
-          //     var tmp = countryhashMap[d.id];
-          //     if(tmp != undefined){
-          //       var tmp2 = nmchash[tmp['cowCode']]['milex'];
-          //       if(tmp2 < 0){
-          //         return ''
-          //       }
-          //       return nmchash[tmp['cowCode']]['milex'];
-          //     }
-          //     return '';
-          //   });
         })
         .on("mouseout", function(d) {
           d3.select(this)
@@ -647,35 +589,8 @@ function drawMap(){
         })
         .on("click", function(d) {
           var tmp = countryhashMap[d.id];
-          if(tmp != undefined){
-            countryFilter = tmp['cowCode'];
-            addBoxes();
-            lineplot(countryFilter, lineVar);
-
-
-            // d3.select("#splotTitleLine")
-            //   .select("#cVar")
-            //   .text(function(){
-            //     return codehash[linevar] || '';
-            //   });
-            d3.select("#splotTitleLine")
-              .select("#cName")
-              .text(function(){
-                if(countryhashCOW[countryFilter]){
-                  $('.sLine').removeClass('hidden');
-                  return countryhashCOW[countryFilter]['StateName'];
-                } else {
-                  $('.sLine').addClass('hidden');
-                  lineg.selectAll('.lines').remove();
-                  lineg.selectAll('g').remove();
-                  return '';
-                }
-              });
-          } else {
-            countryFilter = 0;
-          }
-
           if(clicked == 0 || clicked != d.id){
+            console.log(d.id);
             clicked = d.id;
             allblack();
             d3.select(this)
@@ -691,6 +606,32 @@ function drawMap(){
             d3.select(this)
               .style('stroke-width', '0px');
           }
+
+          if(tmp != undefined){
+            countryFilter = tmp['cowCode'];
+            addBoxes();
+            lineplot(countryFilter, lineVar);
+            d3.select("#splotTitleLine")
+              .select("#cName")
+              .text(function(){
+                if(countryhashCOW[countryFilter]){
+                  $('.sLine').removeClass('hidden');
+                  return countryhashCOW[countryFilter]['StateName'];
+                } else {
+                  $('.sLine').addClass('hidden');
+                  lineg.selectAll('.lines').remove();
+                  lineg.selectAll('g').remove();
+                  return '';
+                }
+              });
+          } else {
+            countryFilter = 0;
+            $('.sLine').addClass('hidden');
+                  lineg.selectAll('.lines').remove();
+                  lineg.selectAll('g').remove();
+          }
+
+
           
 
         });
@@ -719,7 +660,7 @@ function accordClose(){
       if(tmpID != undefined){
         var tmpMP = mphash[Number(tmpID['cowCode'])];
         if(tmpMP != undefined &&
-          (tmpMP['StDateP'] < rounded[1] || 
+          (tmpMP['StDateP'] < rounded[1] && 
           tmpMP['EndDateP'] > rounded[0])){
           return t.url();
         }

@@ -29,6 +29,9 @@ line {
   top:0px;
 }
 
+.svgcontainer{
+  padding-left: 40px;
+}
 #countryId{
   position:absolute;
   font-family: 'Roboto Slab', serif;
@@ -159,9 +162,12 @@ line {
   left:15px;
   font-weight: 400;
   font-size: .7em;
-  width:80px;
-  overflow: auto;
-  line-height: 1;
+  width:100px;
+  line-height: 1.2;
+}
+#cVar{
+  padding-left: 0;
+  margin-left: -5px;
 }
 .sLine{
   top:590px;
